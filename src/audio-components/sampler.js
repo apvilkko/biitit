@@ -1,10 +1,10 @@
-import {getRateFromPitch} from '../core/math';
-import loadBuffer from './loadBuffer';
+import { getRateFromPitch } from "../core/math";
+import loadBuffer from "./loadBuffer";
 
-const create = (ctx, sampleName, inserts) => {
+const create = (ctx, sampleSpec, inserts) => {
   let bufferSource;
   let buffer = null;
-  loadBuffer(ctx, sampleName).then(ret => {
+  loadBuffer(ctx, sampleSpec).then(ret => {
     buffer = ret;
   });
   const output = ctx.createGain();
@@ -14,7 +14,9 @@ const create = (ctx, sampleName, inserts) => {
   } else {
     vca.connect(inserts[0].input);
     for (let i = 0; i < inserts.length; ++i) {
-      inserts[i].output.connect((i < inserts.length - 1) ? inserts[i+1].input : output);
+      inserts[i].output.connect(
+        i < inserts.length - 1 ? inserts[i + 1].input : output
+      );
     }
   }
 
@@ -39,15 +41,15 @@ const create = (ctx, sampleName, inserts) => {
     if (bufferSource) {
       bufferSource.stop(time);
     }
-  }
+  };
 
   return {
     gain: output,
     output,
 
     noteOn,
-    noteOff,
-  }
+    noteOff
+  };
 };
 
 export default create;

@@ -48,6 +48,9 @@ module.exports = {
     })
   ],
   devServer: {
-    contentBase: path.resolve("./public")
+    contentBase: path.resolve("./public"),
+    proxy: {
+      "/shared": "http://localhost:8081"
+    }
   }
 };
