@@ -1,5 +1,7 @@
 import { all } from "../generator/instruments";
 import worker from "./worker";
+import { state } from "../ui/state";
+import { receiveNote } from "../ui/pattern";
 
 const WORKER_TICK_LEN = 0.2;
 const SAFETY_OFFSET = 0.01;
@@ -14,7 +16,7 @@ const scheduleNote = (context, when) => {
   const currentNote = context.sequencer.currentNote;
   const scene = context.scene;
   all.forEach(i => {
-    const event = scene.generators[i].next(currentNote).value;
+    const event = scene.generators[i].generator.next(currentNote).value;
     let hasChildren = Array.isArray(event);
     // console.log(hasChildren, event, i);
     (hasChildren ? event : [event]).forEach(e => {
@@ -34,8 +36,11 @@ const scheduleNote = (context, when) => {
             }
           } else if (instance.noteOn) {
             instance.noteOn(e, when);
+            receiveNote(e, currentNote);
           }
         }
+      } else {
+        receiveNote({ instrument: i }, currentNote);
       }
     });
   });
@@ -45,7 +50,7 @@ const tick = context => {
   const ctx = context.mixer.ctx;
   const seq = context.sequencer;
   const currentTime = ctx.currentTime;
-  const tempo = context.scene.tempo;
+  const tempo = state.scene.tempo;
   const noteLength = seq.noteLength;
   if (seq.playing) {
     let time = seq.lastTickTime;

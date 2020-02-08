@@ -1,0 +1,52 @@
+body,
+input,
+button {
+  font-family: "PT Sans Narrow", sans-serif;
+  font-size: inherit;
+}
+
+body {
+  font-size: 17px;
+}
+
+pre {
+  font-size: 12px;
+}
+
+.form-group {
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+  display: flex;
+  label {
+    padding-right: 0.5em;
+  }
+}
+
+table,
+tr,
+td {
+  margin: 0;
+  padding: 0;
+  border-spacing: 0;
+}
+
+td {
+  border: 1px solid #777;
+  padding: 0 0.2em;
+}
+
+.pattern {
+  display: flex;
+}
+
+.note {
+  display: block;
+  width: 1em;
+  height: 1em;
+  background: red;
+  border: 1px solid black;
+
+  &.empty {
+    background: transparent;
+  }
+}

@@ -1,26 +1,10 @@
 import instruments, { all } from "./instruments";
-import {
-  sample,
-  rand,
-  randFloat,
-  randWeighted,
-  sampleN,
-  shuffle
-} from "../utils";
-import setParams from "../audio-components/setParams";
+import { rand, randFloat, isObject } from "../utils";
 import sampler from "../audio-components/sampler";
 import compressor from "../audio-components/compressor";
 import reverb from "../audio-components/reverb";
-import stereoDelay from "../audio-components/stereoDelay";
 import { getRandomSample } from "./catalog";
-import {
-  createDrumGenerator,
-  createPatternGenerator
-} from "./generators/utils";
-import { NOTE_LENGTH } from "./constants";
 import { getRandomGenerator } from "./generators";
-
-const { quarter, bar, sixteenth, eighth } = NOTE_LENGTH;
 
 const { BD, CP, HC, PR, HO } = instruments;
 
@@ -119,11 +103,11 @@ let generators = {};
 
 const randomizeGenerators = () => {
   generators = {
-    [BD]: getRandomGenerator(rand(1, 100) > 15 ? ["BD"] : null)(BD),
-    [CP]: getRandomGenerator(rand(1, 100) > 15 ? ["CP"] : null)(CP),
-    [HC]: getRandomGenerator(rand(1, 100) > 15 ? ["HC"] : null)(HC),
-    [HO]: getRandomGenerator(rand(1, 100) > 15 ? ["HC"] : null)(HO),
-    [PR]: getRandomGenerator(rand(1, 100) > 15 ? ["PR"] : null)(PR)
+    [BD]: getRandomGenerator(rand(1, 100) > 15 ? ["BD"] : null),
+    [CP]: getRandomGenerator(rand(1, 100) > 15 ? ["CP"] : null),
+    [HC]: getRandomGenerator(rand(1, 100) > 15 ? ["HC"] : null),
+    [HO]: getRandomGenerator(rand(1, 100) > 15 ? ["HC"] : null),
+    [PR]: getRandomGenerator(rand(1, 100) > 15 ? ["PR"] : null)
   };
 };
 
@@ -154,7 +138,28 @@ const randomizers = {
   [HO]: drumRandomizer(HO)
 };
 
-const randomize = context => {
+const mapObject = obj => {
+  if (Array.isArray(obj)) {
+    return obj.map(mapObject);
+  } else if (isObject(obj)) {
+    const out = {};
+    Object.keys(obj).forEach(key => {
+      out[key] = mapObject(obj[key]);
+    });
+    return out;
+  } else {
+    if (typeof obj === "string" || typeof obj === "number") {
+      return obj;
+    }
+  }
+};
+
+const syncToState = (scene, setState) => {
+  const state = { scene: mapObject(scene) };
+  setState(state);
+};
+
+const randomize = (context, setState) => {
   randomizeGenerators();
   cleanup(context);
   const scene = {
@@ -167,7 +172,11 @@ const randomize = context => {
   all.forEach(instrument => {
     scene.instruments[instrument] = randomizers[instrument]();
     const style = scene.instruments[instrument].style;
-    scene.generators[instrument] = generators[instrument](style, scene)();
+    const gen = generators[instrument];
+    scene.generators[instrument] = {
+      name: gen.name,
+      generator: gen.generator(instrument)(style, scene)()
+    };
     scene.instances[instrument] = createInstrumentInstance(
       context,
       instrument,
@@ -211,6 +220,8 @@ const randomize = context => {
     track.gain.connect(panner);
     track.panner = panner;
   });
+
+  syncToState(scene, setState);
 
   return scene;
 };

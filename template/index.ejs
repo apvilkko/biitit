@@ -8,11 +8,16 @@
     />
     <meta name="theme-color" content="#000000" />
     <title><%= htmlWebpackPlugin.options.title %></title>
+    <link
+      href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="app">
       <button id="start">Start</button>
     </div>
+    <div id="content"></div>
     <% for (var css in htmlWebpackPlugin.files.css) { %><link
       href="<%= htmlWebpackPlugin.files.css[css] %>"
       rel="stylesheet"

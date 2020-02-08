@@ -1,15 +1,18 @@
 import "@babel/polyfill";
 
+import "./style.scss";
+
 import createMixer from "./core/mixer";
 import createSequencer, { play, pause, reset } from "./core/sequencer";
 import loop from "./core/loop";
 import setupControls from "./controls";
 import { randomize } from "./generator/scene";
+import { setState } from "./ui/state";
 
 const context = {};
 
 const randomizeScene = () => {
-  context.scene = randomize(context);
+  context.scene = randomize(context, setState);
 };
 
 const createActions = context => ({

@@ -24,3 +24,6 @@ export const sampleN = n => arr => {
   const shuffled = shuffle(arr);
   return shuffled.slice(0, n);
 };
+
+export const isObject = obj =>
+  Object.prototype.toString.call(obj) === "[object Object]";

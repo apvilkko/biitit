@@ -7,7 +7,7 @@ import offbeats from "./drums/offbeats";
 import busy from "./drums/busy";
 import sparse from "./drums/sparse";
 
-const all = {
+const generators = {
   "drums/fourbyfour": { generator: fourbyfour, for: ["BD", "CP", "HC"] },
   "drums/breakbeat": { generator: breakbeat, for: ["BD"] },
   "drums/downbeats": { generator: downbeats, for: ["SN", "CP"] },
@@ -16,6 +16,14 @@ const all = {
   "drums/busy": { generator: busy, for: ["HC"] },
   "drums/sparse": { generator: sparse, for: ["PR", "HO"] }
 };
+
+const all = {};
+Object.keys(generators).forEach(key => {
+  all[key] = {
+    ...generators[key],
+    name: key
+  };
+});
 
 const getRandomGenerator = suitableFor => {
   let choices = [];
@@ -31,7 +39,7 @@ const getRandomGenerator = suitableFor => {
   if (!choices || choices.length === 0) {
     choices = Object.keys(all);
   }
-  return all[sample(choices)].generator;
+  return all[sample(choices)];
 };
 
 export { all as default, getRandomGenerator };
