@@ -1,4 +1,5 @@
 import { state, setState } from "./state";
+import { changeGenerator, changeSample } from "../generator/scene";
 
 const inputs = {
   tempo: {
@@ -11,8 +12,13 @@ const inputs = {
 
 const createCallback = id => {
   return evt => {
-    // TODO change generator in scene
-    console.log(id, evt.target.value);
+    const index = parseInt(id.replace(/[^\d]/g, ""), 10);
+    const value = evt.target.value;
+    if (id.indexOf("generator") > -1) {
+      changeGenerator(index, value, setState);
+    } else {
+      changeSample(index, value, setState);
+    }
   };
 };
 

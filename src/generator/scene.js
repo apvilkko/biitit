@@ -4,9 +4,11 @@ import sampler from "../audio-components/sampler";
 import compressor from "../audio-components/compressor";
 import reverb from "../audio-components/reverb";
 import { getRandomSample } from "./catalog";
-import { getRandomGenerator } from "./generators";
+import allGenerators, { getRandomGenerator } from "./generators";
 
 const { BD, CP, HC, PR, HO } = instruments;
+
+let context;
 
 const cleanupInstance = instance => {
   if (instance.cleanup) {
@@ -31,12 +33,15 @@ const cleanupInstance = instance => {
   }
 };
 
-const cleanup = context => {
+const cleanup = (context, key) => {
   const scene = context.scene;
   if (!scene) {
     return;
   }
   all.forEach(instrument => {
+    if (key && instrument !== key) {
+      return;
+    }
     const instance = scene.instances[instrument];
     const track = context.mixer.tracks[instrument];
     const inserts = instance.mixerInserts;
@@ -159,7 +164,84 @@ const syncToState = (scene, setState) => {
   setState(state);
 };
 
-const randomize = (context, setState) => {
+const changeGenerator = (index, value, setState) => {
+  const scene = context.scene;
+  const key = Object.keys(scene.generators)[index];
+  const gen = allGenerators[value];
+  scene.generators[key] = {
+    name: gen.name,
+    generator: gen.generator(key)(gen.name, scene)()
+  };
+  syncToState(scene, setState);
+};
+
+const PATTERN = /^(\w+)(\d+)\((\w+)\)$/;
+
+const setupInstrumentInstance = (scene, instrument) => {
+  const track = context.mixer.tracks[instrument];
+  const inserts = [];
+  const sends = [];
+  if (instrument === BD) {
+    inserts.push(
+      compressor(context.mixer.ctx, {
+        threshold: -8,
+        ratio: 4,
+        attack: 0.01,
+        release: 0.1
+      })
+    );
+  }
+  for (let i = 0; i < inserts.length; ++i) {
+    inserts[i].output.connect(
+      i < inserts.length - 1 ? inserts[i + 1].input : track.gain
+    );
+  }
+  const instance = scene.instances[instrument];
+  for (let i = 0; i < sends.length; ++i) {
+    instance.output.connect(sends[i].input);
+    sends[i].output.connect(track.gain);
+  }
+  const dest = inserts.length ? inserts[0].input : track.gain;
+  if (instance.output) {
+    instance.output.connect(dest);
+  }
+  if (scene.instruments[instrument].volume) {
+    track.gain.gain.value = scene.instruments[instrument].volume;
+  }
+  instance.mixerInserts = inserts;
+  instance.mixerSends = sends;
+  const panner = context.mixer.ctx.createStereoPanner();
+  panner.pan.value = scene.instruments[instrument].pan || 0;
+  panner.connect(context.mixer.input);
+  track.gain.connect(panner);
+  track.panner = panner;
+};
+
+const changeSample = (index, value, setState) => {
+  const match = value.match(PATTERN);
+  const newSample = {
+    name: match[1],
+    index: Number(match[2]),
+    style: match[3]
+  };
+  const scene = context.scene;
+  const key = Object.keys(scene.generators)[index];
+
+  cleanup(context, key);
+  scene.instruments[key].specs[key].sample = {
+    ...scene.instruments[key].specs[key].sample,
+    ...newSample
+  };
+  scene.instances[key] = createInstrumentInstance(
+    context,
+    key,
+    scene.instruments[key]
+  );
+  setupInstrumentInstance(scene, key);
+  syncToState(scene, setState);
+};
+
+const randomize = setState => {
   randomizeGenerators();
   cleanup(context);
   const scene = {
@@ -171,54 +253,18 @@ const randomize = (context, setState) => {
   };
   all.forEach(instrument => {
     scene.instruments[instrument] = randomizers[instrument]();
-    const style = scene.instruments[instrument].style;
+    //const style = scene.instruments[instrument].style;
     const gen = generators[instrument];
     scene.generators[instrument] = {
       name: gen.name,
-      generator: gen.generator(instrument)(style, scene)()
+      generator: gen.generator(instrument)(gen.name, scene)()
     };
     scene.instances[instrument] = createInstrumentInstance(
       context,
       instrument,
       scene.instruments[instrument]
     );
-    const track = context.mixer.tracks[instrument];
-    const inserts = [];
-    const sends = [];
-    if (instrument === BD) {
-      inserts.push(
-        compressor(context.mixer.ctx, {
-          threshold: -8,
-          ratio: 4,
-          attack: 0.01,
-          release: 0.1
-        })
-      );
-    }
-    for (let i = 0; i < inserts.length; ++i) {
-      inserts[i].output.connect(
-        i < inserts.length - 1 ? inserts[i + 1].input : track.gain
-      );
-    }
-    const instance = scene.instances[instrument];
-    for (let i = 0; i < sends.length; ++i) {
-      instance.output.connect(sends[i].input);
-      sends[i].output.connect(track.gain);
-    }
-    const dest = inserts.length ? inserts[0].input : track.gain;
-    if (instance.output) {
-      instance.output.connect(dest);
-    }
-    if (scene.instruments[instrument].volume) {
-      track.gain.gain.value = scene.instruments[instrument].volume;
-    }
-    instance.mixerInserts = inserts;
-    instance.mixerSends = sends;
-    const panner = context.mixer.ctx.createStereoPanner();
-    panner.pan.value = scene.instruments[instrument].pan || 0;
-    panner.connect(context.mixer.input);
-    track.gain.connect(panner);
-    track.panner = panner;
+    setupInstrumentInstance(scene, instrument);
   });
 
   syncToState(scene, setState);
@@ -226,4 +272,8 @@ const randomize = (context, setState) => {
   return scene;
 };
 
-export { randomize };
+const initScene = ctx => {
+  context = ctx;
+};
+
+export { initScene, randomize, changeGenerator, changeSample };

@@ -1,7 +1,74 @@
 import inputs, { createCallback } from "./inputs";
 import all from "../generator/generators";
+import CATALOG from "../generator/catalog";
 
-const formatSample = spec => `${spec.name}${spec.index}(${spec.style})`;
+const getSampleLabel = spec => `${spec.name}${spec.index}(${spec.style})`;
+
+const prepareSampleList = () => {
+  const choices = [];
+  const keys = Object.keys(CATALOG).sort();
+  keys.forEach(inst => {
+    choices.push({ group: true, label: inst });
+    CATALOG[inst].forEach(sample => {
+      for (let i = 0; i < sample.amount; ++i) {
+        choices.push({ ...sample, index: i + 1 });
+      }
+    });
+  });
+  return choices;
+};
+
+const sampleChoices = prepareSampleList();
+
+const renderSelect = (id, options, selected, valueFn, groups) => {
+  let inGroup = false;
+  return `<select id="${id}">
+  ${options
+    .map(x => {
+      if (groups && x.group) {
+        let out = "";
+        if (inGroup) {
+          inGroup = false;
+          out += `</optgroup>`;
+        }
+        return out + `<optgroup label="${valueFn(x)}">`;
+      }
+      const value = valueFn ? valueFn(x) : x;
+      return `<option value="${value}" ${
+        selected === value ? "selected" : ""
+      }>${value}</option>`;
+    })
+    .join("")}
+  </select>
+  `;
+};
+
+const renderSampleValue = x => {
+  if (x.group) {
+    return x.label;
+  }
+  return getSampleLabel(x);
+};
+
+const renderSample = (spec, i) => {
+  const value = getSampleLabel(spec);
+  return renderSelect(
+    `sample-select-${i}`,
+    sampleChoices,
+    value,
+    renderSampleValue,
+    true
+  );
+};
+
+const renderGenerator = (scene, key, i) => {
+  const value = scene.generators[key] ? scene.generators[key].name : null;
+  if (value) {
+    return renderSelect(`generator-select-${i}`, Object.keys(all), value);
+  } else {
+    return "";
+  }
+};
 
 const attr = obj => {
   const key = Object.keys(obj)[0];
@@ -58,21 +125,6 @@ const renderPattern = pattern => {
   `;
 };
 
-const renderGenerator = (scene, key) => {
-  const value = scene.generators[key] ? scene.generators[key].name : null;
-  if (value) {
-    return `
-    <select id="generator">
-    ${Object.keys(all).map(
-      x => `<option value="${x}" ${value === x ? "selected" : ""}>${x}</option>`
-    )}
-    </select>
-    `;
-  } else {
-    return "";
-  }
-};
-
 const section = (sections, obj, tag) => {
   const t = tag || "div";
   const id = Object.keys(obj)[0];
@@ -94,10 +146,15 @@ const logOnce = (...params) => {
 };
 
 const addListeners = state => {
-  const generatorIds = Object.keys(state.scene.generators).map(
-    x => `${x}-generator`
-  );
+  const trackIds = Object.keys(state.scene.generators).map((x, i) => i);
+  const generatorIds = trackIds.map(i => `generator-select-${i}`);
+  const sampleIds = trackIds.map(i => `sample-select-${i}`);
   generatorIds.forEach(id => {
+    const callback = createCallback(id);
+    addListener(id, callback);
+    listeners[id] = { callback, id };
+  });
+  sampleIds.forEach(id => {
     const callback = createCallback(id);
     addListener(id, callback);
     listeners[id] = { callback, id };
@@ -155,8 +212,8 @@ const render = state => {
       { [`${key}-pattern`]: renderPattern((state.pattern || {})[key]) },
       "td"
     );
-    sect({ [`${key}-generator`]: renderGenerator(scene, key) }, "td");
-    sect({ [`${key}-sample`]: formatSample(inst.specs[key].sample) }, "td");
+    sect({ [`${key}-generator`]: renderGenerator(scene, key, i) }, "td");
+    sect({ [`${key}-sample`]: renderSample(inst.specs[key].sample, i) }, "td");
   });
 
   const changed = {};

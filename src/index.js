@@ -6,13 +6,13 @@ import createMixer from "./core/mixer";
 import createSequencer, { play, pause, reset } from "./core/sequencer";
 import loop from "./core/loop";
 import setupControls from "./controls";
-import { randomize } from "./generator/scene";
+import { randomize, initScene } from "./generator/scene";
 import { setState } from "./ui/state";
 
 const context = {};
 
 const randomizeScene = () => {
-  context.scene = randomize(context, setState);
+  context.scene = randomize(setState);
 };
 
 const createActions = context => ({
@@ -36,6 +36,7 @@ const setup = () => {
   context.sequencer = createSequencer();
   context.actions = createActions(context);
   setupControls(root, context.actions);
+  initScene(context);
   randomizeScene();
   loop(context);
   play(context.sequencer);
