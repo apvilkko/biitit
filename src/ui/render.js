@@ -1,6 +1,7 @@
 import inputs, { createCallback } from "./inputs";
 import all from "../generator/generators";
 import CATALOG from "../generator/catalog";
+import { SCENE_PRESETS } from "../generator/presets";
 
 const getSampleLabel = spec => `${spec.name}${spec.index}(${spec.style})`;
 
@@ -20,9 +21,21 @@ const prepareSampleList = () => {
 
 const sampleChoices = prepareSampleList();
 
-const renderSelect = (id, options, selected, valueFn, groups) => {
+const renderLabel = ({ id, label }) =>
+  `<label for="${id}">${label || id}</label>`;
+
+const formGroup = ({ children }) => `<div class="form-group">${children}</div>`;
+const emptyWrapper = ({ children }) => children;
+
+const renderSelect = ({ id, options, selected, valueFn, groups, label }) => {
   let inGroup = false;
-  return `<select id="${id}">
+  let out = [];
+  let wrapper = emptyWrapper;
+  if (label) {
+    wrapper = formGroup;
+    out.push(renderLabel({ id, label }));
+  }
+  out.push(`<select id="${id}">
   ${options
     .map(x => {
       if (groups && x.group) {
@@ -40,7 +53,8 @@ const renderSelect = (id, options, selected, valueFn, groups) => {
     })
     .join("")}
   </select>
-  `;
+  `);
+  return wrapper({ children: out.join("") });
 };
 
 const renderSampleValue = x => {
@@ -52,19 +66,23 @@ const renderSampleValue = x => {
 
 const renderSample = (spec, i) => {
   const value = getSampleLabel(spec);
-  return renderSelect(
-    `sample-select-${i}`,
-    sampleChoices,
-    value,
-    renderSampleValue,
-    true
-  );
+  return renderSelect({
+    id: `sample-select-${i}`,
+    options: sampleChoices,
+    selected: value,
+    valueFn: renderSampleValue,
+    groups: true
+  });
 };
 
 const renderGenerator = (scene, key, i) => {
-  const value = scene.generators[key] ? scene.generators[key].name : null;
+  const value = scene.generators[i] ? scene.generators[i].name : null;
   if (value) {
-    return renderSelect(`generator-select-${i}`, Object.keys(all), value);
+    return renderSelect({
+      id: `generator-select-${i}`,
+      options: Object.keys(all),
+      selected: value
+    });
   } else {
     return "";
   }
@@ -81,13 +99,18 @@ const attr = obj => {
 
 const input = props => {
   const { id, type, label } = props;
-  return `<div class="form-group">
-  <label for="${id}">${label || id}</label>
-  <input ${["id", "value", "min", "max"]
-    .map(x => attr({ [x]: props[x] }))
-    .join(" ")}
+  return formGroup({
+    children: `${renderLabel({ id, label })}<input ${[
+      "id",
+      "value",
+      "min",
+      "max"
+    ]
+      .map(x => attr({ [x]: props[x] }))
+      .join(" ")}
   ${attr({ type: type || "text" })} />
-  </div>`;
+  `
+  });
 };
 
 const listeners = {};
@@ -172,6 +195,17 @@ const removeListeners = () => {
   });
 };
 
+const PRESETS = ["select…", ...SCENE_PRESETS];
+
+const renderPresets = scene => {
+  return renderSelect({
+    id: "preset",
+    options: PRESETS,
+    selected: scene.preset || null,
+    label: "preset"
+  });
+};
+
 const render = state => {
   const el = document.getElementById("content");
   const { scene } = state;
@@ -180,13 +214,14 @@ const render = state => {
   const sect = (obj, tag) => section(sections, obj, tag);
 
   sect({
-    header: input({
-      value: scene.tempo,
-      id: "tempo",
-      type: "number",
-      min: 30,
-      max: 250
-    })
+    header:
+      input({
+        value: scene.tempo,
+        id: "tempo",
+        type: "number",
+        min: 30,
+        max: 250
+      }) + renderPresets(scene)
   });
   sect(
     {
@@ -203,17 +238,14 @@ const render = state => {
     "tr"
   );
 
-  const instruments = Object.keys(scene.instruments);
+  const instruments = scene.types;
 
   instruments.forEach((key, i) => {
-    const inst = scene.instruments[key];
-    sect({ [`${key}-index`]: i + 1 }, "td");
-    sect(
-      { [`${key}-pattern`]: renderPattern((state.pattern || {})[key]) },
-      "td"
-    );
-    sect({ [`${key}-generator`]: renderGenerator(scene, key, i) }, "td");
-    sect({ [`${key}-sample`]: renderSample(inst.specs[key].sample, i) }, "td");
+    const inst = scene.instruments[i];
+    sect({ [`index-${i}`]: i + 1 }, "td");
+    sect({ [`pattern-${i}`]: renderPattern((state.pattern || {})[i]) }, "td");
+    sect({ [`generator-${i}`]: renderGenerator(scene, key, i) }, "td");
+    sect({ [`sample-${i}`]: renderSample(inst.specs[key].sample, i) }, "td");
   });
 
   const changed = {};
@@ -224,15 +256,17 @@ const render = state => {
     if (!same) {
       anyChanged = true;
     }
+    cache[s] = sections[s];
   });
 
-  //logOnce(sections);
+  const amountChanged = cache.numItems !== Object.keys(sections).length;
+  cache.numItems = Object.keys(sections).length;
 
-  if (!anyChanged) {
+  if (!anyChanged && !amountChanged) {
     return;
   }
 
-  if (firstRenderDone) {
+  if (firstRenderDone && !amountChanged) {
     removeListeners();
     Object.keys(changed).forEach(s => {
       if (changed[s]) {
@@ -254,9 +288,9 @@ const render = state => {
     ${sections.tableHeader}
     ${instruments
       .map(
-        key => `<tr>
+        (key, i) => `<tr>
     ${["index", "pattern", "generator", "sample"]
-      .map(cell => sections[`${key}-${cell}`])
+      .map(cell => sections[`${cell}-${i}`])
       .join("")}
     </tr>`
       )

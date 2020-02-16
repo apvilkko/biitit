@@ -1,11 +1,22 @@
-import { state, setState } from "./state";
-import { changeGenerator, changeSample } from "../generator/scene";
+import { setState } from "./state";
+import {
+  changeGenerator,
+  changeSample,
+  changeTempo,
+  changePreset
+} from "../generator/scene";
 
 const inputs = {
   tempo: {
     callback: evt => {
       const value = evt.target.value;
-      setState({ ...state, scene: { ...state.scene, tempo: value } });
+      changeTempo(value, setState);
+    }
+  },
+  preset: {
+    callback: evt => {
+      const value = evt.target.value;
+      changePreset(value, setState);
     }
   }
 };

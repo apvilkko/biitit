@@ -3,7 +3,8 @@ import { sample, rand } from "../utils";
 const ALIASES = {
   CL: "CP",
   BASS: "BS",
-  STAB: "ST"
+  STAB: "ST",
+  PAD: "PD"
 };
 
 const BY_STYLE = {
@@ -51,6 +52,7 @@ const BY_STYLE = {
       BD: { amount: 6 },
       CL: { amount: 6 },
       HC: { amount: 6 },
+      impulse: { amount: 1 },
       PAD: { amount: 5 },
       PR: { amount: 6 },
       STAB: { amount: 5 }
@@ -73,8 +75,11 @@ Object.keys(BY_STYLE.samples).forEach(style => {
   });
 });
 
-const getRandomSample = key => {
-  const styleSpec = sample(CATALOG[key]);
+const getRandomSample = (key, sampleGroup) => {
+  const choices = sampleGroup
+    ? CATALOG[key].filter(x => x.style === sampleGroup)
+    : CATALOG[key];
+  const styleSpec = sample(choices);
   const index = rand(1, styleSpec.amount);
   const ret = {
     ...styleSpec,

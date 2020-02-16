@@ -35,10 +35,13 @@ const createPatternGenerator = (patLength, pre, noteGetter, noOff, update) => (
     }
   };
 
-const createDrumGenerator = (instrument, noteGetter) => (style, scene) =>
+const createDrumGenerator = ({ index, instrument }, noteGetter) => (
+  style,
+  scene
+) =>
   function* drumGenerator() {
     let currentNote = 0;
-    const spec = scene.instruments[instrument].specs[instrument];
+    const spec = scene.instruments[index].specs[instrument];
     const common = { instrument, note: spec.pitch };
     currentNote = yield;
     const state = {};

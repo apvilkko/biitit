@@ -1,6 +1,7 @@
-import { all } from "../generator/instruments";
 import compressor from "../audio-components/compressor";
 import waveshaper from "../audio-components/waveshaper";
+
+const NUM_TRACKS = 10;
 
 const create = () => {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -18,14 +19,14 @@ const create = () => {
   masterGain.connect(shaper.input);
   masterGain.gain.value = 0.7;
 
-  const tracks = {};
-  all.forEach(instrument => {
+  const tracks = [];
+  for (let i = 0; i < NUM_TRACKS; ++i) {
     const gain = ctx.createGain();
     gain.gain.value = 0.7;
-    tracks[instrument] = {
+    tracks.push({
       gain
-    };
-  });
+    });
+  }
 
   return {
     ctx,
