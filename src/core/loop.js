@@ -4,12 +4,6 @@ import { receiveNote } from "../ui/pattern";
 const WORKER_TICK_LEN = 0.2;
 const SAFETY_OFFSET = 0.01;
 
-const getNextNoteTime = (tempo, noteLength, time) => {
-  const beatLen = 60.0 / tempo;
-  const currentNote = Math.floor(time / (noteLength * beatLen));
-  return (currentNote + 1) * (noteLength * beatLen);
-};
-
 const scheduleNote = (context, when) => {
   const currentNote = context.sequencer.currentNote;
   const scene = context.scene;
@@ -29,8 +23,12 @@ const scheduleNote = (context, when) => {
           if (e.action === "OFF") {
             if (instance.noteOff) {
               instance.noteOff(e, when);
+              receiveNote({ instrument: key }, i, currentNote);
             }
           } else if (instance.noteOn) {
+            if (instance.polyphony === 1) {
+              instance.noteOff(e, when);
+            }
             instance.noteOn(e, when);
             receiveNote(e, i, currentNote);
           }
@@ -47,26 +45,39 @@ const tick = context => {
   const seq = context.sequencer;
   const currentTime = ctx.currentTime;
   const tempo = context.scene.tempo;
+  const shufflePercentage = context.scene.shufflePercentage || 0;
   const noteLength = seq.noteLength;
   if (seq.playing) {
     let time = seq.lastTickTime;
-    const nextNotes = [];
+    let shuffleDelta = 0;
     let nextNoteTime;
-    do {
-      nextNoteTime = getNextNoteTime(tempo, noteLength, time);
-      if (nextNoteTime < currentTime) {
-        nextNotes.push(nextNoteTime);
-      }
-      time += nextNoteTime - time + 0.005;
-    } while (nextNoteTime < currentTime);
 
-    for (let i = 0; i < nextNotes.length; ++i) {
-      const delta = Math.max(
-        nextNotes[i] - (currentTime - WORKER_TICK_LEN) + SAFETY_OFFSET,
-        0
-      );
-      scheduleNote(context, currentTime + delta);
-      context.sequencer.currentNote++;
+    const beatLen = 60.0 / tempo;
+    const tickLen = noteLength * beatLen;
+
+    for (let t = time; t < currentTime; t += tickLen) {
+      const currentTick = Math.floor(t / tickLen);
+      if (seq.lastTick !== currentTick) {
+        const nextTick = currentTick + 1;
+        nextNoteTime = nextTick * tickLen;
+        if (context.sequencer.currentNote % 4 === 2) {
+          shuffleDelta = (tickLen * 2 * (shufflePercentage / 100) * 2) / 3;
+        } else {
+          shuffleDelta = 0;
+        }
+
+        const delta = Math.max(
+          nextNoteTime +
+            shuffleDelta -
+            (currentTime - WORKER_TICK_LEN) +
+            SAFETY_OFFSET,
+          0
+        );
+        scheduleNote(context, currentTime + delta);
+
+        context.sequencer.currentNote++;
+      }
+      seq.lastTick = currentTick;
     }
   }
   seq.lastTickTime = currentTime;

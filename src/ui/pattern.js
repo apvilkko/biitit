@@ -1,5 +1,7 @@
 import { state, setState } from "./state";
 
+const len = 16;
+
 const receiveNote = (event, i, counter) => {
   if (counter % 2 !== 0) {
     return;
@@ -10,7 +12,6 @@ const receiveNote = (event, i, counter) => {
       ...state.pattern
     }
   };
-  const len = 16;
   if (!newState.pattern[i]) {
     newState.pattern[i] = Array.from({ length: len }).map(() => null);
   }
