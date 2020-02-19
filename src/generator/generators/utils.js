@@ -1,3 +1,5 @@
+import { ROOT_NOTE } from "../constants";
+
 const createArray = length => Array.from({ length }, () => null);
 
 const createPatternGenerator = (patLength, pre, noteGetter, noOff, update) => (
@@ -7,7 +9,7 @@ const createPatternGenerator = (patLength, pre, noteGetter, noOff, update) => (
   function* patternGenerator() {
     let currentNote = 0;
     const pattern = createArray(patLength);
-    const data = pre({ style, scene }) || {};
+    const data = pre ? pre({ style, scene }) || {} : {};
     while (true) {
       let note;
       const position = currentNote % patLength;
@@ -42,7 +44,7 @@ const createDrumGenerator = ({ index, instrument }, noteGetter) => (
   function* drumGenerator() {
     let currentNote = 0;
     const spec = scene.instruments[index].specs[instrument];
-    const common = { instrument, note: spec.pitch };
+    const common = { instrument, note: ROOT_NOTE + spec.pitch };
     currentNote = yield;
     const state = {};
     while (true) {

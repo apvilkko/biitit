@@ -75,6 +75,7 @@ const createInstrumentInstance = (context, instrument, specs) => {
     case BS:
     case ST: {
       const sampleSpec = specs.specs[instrument].sample;
+      const polyphony = specs.specs[instrument].polyphony;
       const shouldComp = false;
       const shouldRev = false;
       const wetRev = false;
@@ -98,7 +99,7 @@ const createInstrumentInstance = (context, instrument, specs) => {
           })
         );
       }
-      const synth = sampler(context.mixer.ctx, sampleSpec, inserts);
+      const synth = sampler(context.mixer.ctx, sampleSpec, inserts, polyphony);
       return synth;
     }
     default:
@@ -111,12 +112,17 @@ const createInstrumentInstance = (context, instrument, specs) => {
 
 let generators = {};
 
+const getGenSpec = (preset, i) => {
+  const out = normalizeGenSpec(preset.tracks[i].generator);
+  return out || {};
+};
+
 const randomizeGenerators = preset => {
   if (preset) {
     generators = {};
-    preset.types.forEach(key => {
-      const genSpec = normalizeGenSpec(preset.generators[key]);
-      generators[key] = allGenerators[genSpec.name];
+    preset.tracks.forEach((trackSpec, i) => {
+      const genSpec = getGenSpec(preset, i);
+      generators[trackSpec.type] = allGenerators[genSpec.name];
     });
   } else {
     generators = {
@@ -129,14 +135,15 @@ const randomizeGenerators = preset => {
   }
 };
 
-const drumRandomizer = (instrument, sampleGroup) => () => {
+const drumRandomizer = (instrument, sampleGroup, opts) => () => {
   const specs = {
     [instrument]: {
       sample: getRandomSample(instrument, sampleGroup),
       volume: 0.6,
       pan: randFloat(-0.05, 0.05),
-      pitch: randFloat(-3, 3)
+      pitch: randFloat(-3, 3),
       //style: sample(drumStyles[instrument] || [])
+      ...opts
     }
   };
   const reverbImpulse = getRandomSample("impulse", sampleGroup);
@@ -153,8 +160,9 @@ let randomizers = {};
 const setupRandomizers = preset => {
   if (preset) {
     randomizers = {};
-    preset.types.forEach(key => {
-      randomizers[key] = drumRandomizer(key, preset.name);
+    preset.tracks.forEach(trackSpec => {
+      const key = trackSpec.type;
+      randomizers[key] = drumRandomizer(key, preset.name, trackSpec.randomizer);
     });
   } else {
     randomizers = {
@@ -293,19 +301,24 @@ const randomize = (setState, presetName) => {
     instances: [],
     rootNoteOffset: rand(-4, 4)
   };
-  const instSet = preset ? preset.types : startingSet;
+  const instSet = preset ? preset.tracks.map(x => x.type) : startingSet;
   instSet.forEach((instrument, i) => {
     scene.types.push(instrument);
     scene.instruments.push(randomizers[instrument]());
     const gen = generators[instrument];
+    let genOpts = {
+      index: i,
+      instrument,
+      ...(preset ? getGenSpec(preset, i).opts || {} : {})
+    };
     scene.generators.push({
       name: gen.name,
-      generator: gen.generator({ index: i, instrument })(gen.name, scene)()
+      generator: gen.generator(genOpts)(gen.name, scene)()
     });
     scene.instances.push(
       createInstrumentInstance(context, instrument, scene.instruments[i])
     );
-    setupInstrumentInstance(scene, i, preset);
+    setupInstrumentInstance(scene, i);
   });
 
   syncToState(scene, setState);
