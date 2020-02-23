@@ -6,7 +6,7 @@ const { sixteenth } = NOTE_LENGTH;
 
 export default opts =>
   createDrumGenerator(opts, ({ currentNote, spec, common }) => {
-    if (currentNote % sixteenth === 0 && rand(1, 100) > (opts.prob || 50)) {
+    if (currentNote % sixteenth === 0 && rand(1, 100) < (opts.prob || 50)) {
       return { ...common, velocity: spec.volume * randFloat(0.5, 1.0) };
     }
     return null;

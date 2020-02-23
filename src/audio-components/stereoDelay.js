@@ -1,13 +1,27 @@
-const create = (ctx, {
-  lDelay = 0.3, rDelay = 0.2, feedback = 0.6, filterFrequency = 2000, gain = 1.0
-}) => {
+const synced = (ratio, tempo) => {
+  const beatLen = 60 / tempo;
+  return ratio * beatLen;
+};
+
+const create = (
+  ctx,
+  {
+    lDelay = 0.3,
+    rDelay = 0.2,
+    feedback = 0.6,
+    filterFrequency = 2000,
+    gain = 1.0,
+    tempo,
+    sync
+  }
+) => {
   const output = ctx.createGain();
   output.gain.value = gain;
   const input = ctx.createGain();
   const delayL = ctx.createDelay(2);
-  delayL.delayTime.value = lDelay;
+  delayL.delayTime.value = sync ? synced(lDelay, tempo) : lDelay;
   const delayR = ctx.createDelay(2);
-  delayR.delayTime.value = rDelay;
+  delayR.delayTime.value = sync ? synced(rDelay, tempo) : rDelay;
   const filter = ctx.createBiquadFilter();
   filter.frequency.value = filterFrequency;
   const feedbackL = ctx.createGain();
@@ -29,7 +43,7 @@ const create = (ctx, {
 
   return {
     input,
-    output,
+    output
   };
 };
 

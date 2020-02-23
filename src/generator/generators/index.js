@@ -7,7 +7,8 @@ import offbeats from "./drums/offbeats";
 import busy from "./drums/busy";
 import sparse from "./drums/sparse";
 import nonbeats from "./drums/nonbeats";
-import deephouse from "./bass/deephouse";
+import { dhBass, dhPad, dhStab } from "./deephouse";
+import deephouseCl from "./drums/deephouse-cl";
 
 const generators = {
   "drums/fourbyfour": { generator: fourbyfour, for: ["BD", "CP", "HC"] },
@@ -18,7 +19,10 @@ const generators = {
   "drums/busy": { generator: busy, for: ["HC"] },
   "drums/sparse": { generator: sparse, for: ["PR", "HO"] },
   "drums/nonbeats": { generator: nonbeats, for: ["PR", "HC", "HO"] },
-  "bass/deephouse": { generator: deephouse, for: ["BS"] }
+  "bass/deephouse": { generator: dhBass, for: ["BS"] },
+  "stab/deephouse": { generator: dhStab, for: ["ST"] },
+  "pad/deephouse": { generator: dhPad, for: ["PD"] },
+  "drums/deephouse-cl": { generator: deephouseCl, for: ["CL"] }
 };
 
 const all = {};

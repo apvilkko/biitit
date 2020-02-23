@@ -8,7 +8,10 @@ export default opts =>
   createDrumGenerator(opts, ({ currentNote, spec, common }) => {
     if (currentNote % (2 * quarter) === quarter) {
       return { ...common, velocity: spec.volume };
-    } else if (currentNote % sixteenth === 0 && rand(1, 100) > 97) {
+    } else if (
+      currentNote % sixteenth === 0 &&
+      rand(1, 100) < (opts.prob || 3)
+    ) {
       return { ...common, velocity: spec.volume * randFloat(0.5, 1.0) };
     }
     return null;

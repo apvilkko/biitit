@@ -9,7 +9,7 @@ export default opts =>
     if (
       currentNote % sixteenth === 0 &&
       currentNote % quarter !== 0 &&
-      rand(1, 100) > (opts.prob || 90)
+      rand(1, 100) < (opts.prob || 10)
     ) {
       return { ...common, velocity: spec.volume * randFloat(0.5, 1.0) };
     }
