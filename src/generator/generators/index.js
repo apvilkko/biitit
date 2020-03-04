@@ -9,6 +9,7 @@ import sparse from "./drums/sparse";
 import nonbeats from "./drums/nonbeats";
 import { dhBass, dhPad, dhStab } from "./deephouse";
 import deephouseCl from "./drums/deephouse-cl";
+import { teBroken } from "./techno";
 
 const generators = {
   "drums/fourbyfour": { generator: fourbyfour, for: ["BD", "CP", "HC"] },
@@ -22,7 +23,8 @@ const generators = {
   "bass/deephouse": { generator: dhBass, for: ["BS"] },
   "stab/deephouse": { generator: dhStab, for: ["ST"] },
   "pad/deephouse": { generator: dhPad, for: ["PD"] },
-  "drums/deephouse-cl": { generator: deephouseCl, for: ["CL"] }
+  "drums/deephouse-cl": { generator: deephouseCl, for: ["CL"] },
+  "drums/techno-broken": { generator: teBroken, for: ["BD", "CP", "SN"] }
 };
 
 const all = {};

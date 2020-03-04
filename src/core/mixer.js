@@ -1,5 +1,4 @@
 import compressor from "../audio-components/compressor";
-import waveshaper from "../audio-components/waveshaper";
 
 const NUM_TRACKS = 10;
 
@@ -12,12 +11,15 @@ const create = () => {
   const masterLimiter = compressor(ctx, { ratio: 20.0, knee: 0 });
   masterLimiter.output.connect(analyser);
 
-  const shaper = waveshaper(ctx);
-  shaper.output.connect(masterLimiter.input);
-
   const masterGain = ctx.createGain();
-  masterGain.connect(shaper.input);
+  masterGain.connect(masterLimiter.input);
   masterGain.gain.value = 0.7;
+
+  const masterInserts = {
+    input: masterGain,
+    output: masterLimiter.input,
+    inserts: []
+  };
 
   const tracks = [];
   for (let i = 0; i < NUM_TRACKS; ++i) {
@@ -33,7 +35,8 @@ const create = () => {
     masterGain,
     analyser,
     input: masterGain,
-    tracks
+    tracks,
+    masterInserts
   };
 };
 

@@ -1,15 +1,16 @@
 import instruments from "./instruments";
-import { rand, randFloat, isObject } from "../utils";
+import { rand, randFloat, isObject, maybe, randLt } from "../utils";
 import sampler from "../audio-components/sampler";
 import compressor from "../audio-components/compressor";
 import reverb from "../audio-components/reverb";
 import stereoDelay from "../audio-components/stereoDelay";
+import waveshaper from "../audio-components/waveshaper";
 import { getRandomSample } from "./catalog";
 import allGenerators, { getRandomGenerator } from "./generators";
 import PRESETS, { normalizeGenSpec } from "./presets";
 import { play, reset, pause } from "../core/sequencer";
 
-const { BD, CP, HC, PR, HO, BS, PD, ST } = instruments;
+const { BD, CP, HC, PR, HO, BS, PD, ST, SN, RD } = instruments;
 
 let context;
 
@@ -75,7 +76,9 @@ const createInstrumentInstance = (context, instrument, specs) => {
     case HO:
     case PD:
     case BS:
-    case ST: {
+    case ST:
+    case SN:
+    case RD: {
       const sampleSpec = specs.specs[instrument].sample;
       const polyphony = specs.specs[instrument].polyphony;
       const shouldComp = false;
@@ -164,6 +167,7 @@ const setupRandomizers = preset => {
     randomizers = {};
     preset.tracks.forEach(trackSpec => {
       const key = trackSpec.type;
+      // TODO preset ability to use "wrong" samples
       randomizers[key] = drumRandomizer(key, preset.name, trackSpec.randomizer);
     });
   } else {
@@ -315,25 +319,111 @@ const changePreset = (value, setState) => {
 
 const startingSet = [BD, CP, HC, HO, PR];
 
+const toMaybeParam = obj => {
+  if (obj.min && obj.max) {
+    return rand(obj.min, obj.max);
+  }
+  return obj;
+};
+
+const randFromSpec = spec => {
+  if (!spec) {
+    return null;
+  }
+  if (spec.maybe) {
+    return maybe(spec.maybe.map(toMaybeParam));
+  }
+  if (spec.min && spec.max) {
+    return rand(spec.min, spec.max);
+  }
+  return null;
+};
+
+const cleanupMasterEffects = () => {
+  const needCleanup = !!context.mixer.masterInserts.inserts.length;
+  if (needCleanup) {
+    context.mixer.masterInserts.input.disconnect();
+  }
+  context.mixer.masterInserts.inserts.forEach(insert => {
+    insert.input.disconnect();
+    insert.output.disconnect();
+  });
+  context.mixer.masterInserts.inserts = [];
+  if (needCleanup) {
+    context.mixer.masterInserts.input.connect(
+      context.mixer.masterInserts.output
+    );
+  }
+};
+
+const normalizeSpec = spec => {
+  const out = {};
+  Object.keys(spec).forEach(key => {
+    let val = spec[key];
+    if (spec[key].min && spec[key].max) {
+      val = randFloat(spec[key].min, spec[key].max);
+    }
+    out[key] = val;
+  });
+  return out;
+};
+
+const setupMasterEffects = scene => {
+  cleanupMasterEffects();
+  if (scene && scene.masterInserts) {
+    const instances = [];
+    for (let i = 0; i < scene.masterInserts.length; ++i) {
+      const spec = scene.masterInserts[i];
+      let instance;
+      switch (spec.name) {
+        case "waveshaper": {
+          instance = waveshaper(context.mixer.ctx, spec);
+          break;
+        }
+        default:
+          continue;
+      }
+      if (instance) {
+        instances.push(instance);
+      }
+    }
+    if (instances.length) {
+      context.mixer.masterInserts.input.disconnect();
+      for (let i = 0; i < instances.length + 1; ++i) {
+        const instance = instances[i];
+        const source =
+          i === 0 ? context.mixer.masterInserts.input : instances[i - 1].output;
+        const destination =
+          i === instances.length
+            ? context.mixer.masterInserts.output
+            : instance.input;
+        if (i < instances.length) {
+          context.mixer.masterInserts.inserts.push(instance);
+        }
+        source.connect(destination);
+      }
+    }
+  }
+};
+
 const randomize = (setState, presetName) => {
   cleanup(context);
   const preset = PRESETS[presetName] || null;
   randomizeGenerators(preset);
   setupRandomizers(preset);
   const scene = {
-    tempo: rand(
-      preset ? preset.tempo.min : 80,
-      preset ? preset.tempo.max : 165
-    ),
-    shufflePercentage: rand(
-      preset ? preset.shufflePercentage.min : 0,
-      preset ? preset.shufflePercentage.max : 30
-    ),
+    tempo: (preset ? randFromSpec(preset.tempo) : null) || rand(80, 165),
+    shufflePercentage:
+      (preset ? randFromSpec(preset.shufflePercentage) : null) || rand(0, 30),
     types: [],
     instruments: [],
     generators: [],
     instances: [],
-    rootNoteOffset: rand(-4, 4)
+    rootNoteOffset: rand(-4, 4),
+    masterInserts:
+      preset && preset.masterInserts
+        ? preset.masterInserts.map(normalizeSpec)
+        : (randLt(50) ? { name: "waveshaper" } : null) || null
   };
   const instSet = preset ? preset.tracks.map(x => x.type) : startingSet;
   instSet.forEach((instrument, i) => {
@@ -354,6 +444,8 @@ const randomize = (setState, presetName) => {
     );
     setupInstrumentInstance(scene, i, preset ? preset.tracks[i] : null);
   });
+
+  setupMasterEffects(scene);
 
   syncToState(scene, setState);
   return scene;

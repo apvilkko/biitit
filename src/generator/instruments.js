@@ -6,8 +6,10 @@ const BS = "BS";
 const HO = "HO";
 const ST = "ST";
 const PD = "PD";
+const RD = "RD";
+const SN = "SN";
 
-export const all = [BD, HC, CP, PR, HO, ST, BS, PD];
+export const all = [BD, HC, CP, PR, HO, ST, BS, PD, RD, SN];
 
 export default {
   BD,
@@ -17,5 +19,7 @@ export default {
   PD,
   PR,
   HO,
-  ST
+  ST,
+  RD,
+  SN
 };

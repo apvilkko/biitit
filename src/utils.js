@@ -27,3 +27,28 @@ export const sampleN = n => arr => {
 
 export const isObject = obj =>
   Object.prototype.toString.call(obj) === "[object Object]";
+
+export const randLt = value => Math.random() < value / 100.0;
+
+export const maybe = (prob, opt1, opt2) => {
+  if (typeof prob === "number") {
+    return randLt(prob) ? opt1 : opt2;
+  }
+  let sum = 0;
+  let chosen = null;
+  const sorted = Object.keys(prob).sort((a, b) => {
+    if (a === "rest") {
+      return 1;
+    } else if (b === "rest") {
+      return -1;
+    }
+    return a - b;
+  });
+  sorted.forEach(key => {
+    sum += key === "rest" ? 100 - sum : Number(key);
+    if (!chosen && randLt(sum)) {
+      chosen = prob[key];
+    }
+  });
+  return chosen;
+};
