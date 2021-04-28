@@ -1,14 +1,16 @@
 export enum InstrumentKey {
-  BD = 'BD',
-  HC = 'HC',
-  CP = 'CP',
-  PR = 'PR',
-  BS = 'BS',
-  HO = 'HO',
-  ST = 'ST',
-  PD = 'PD',
-  RD = 'RD',
-  SN = 'SN',
+  BD = 'BD', // Kick
+  HC = 'HC', // Hi-hat closed
+  CP = 'CP', // Clap
+  PR = 'PR', // Percussion
+  BS = 'BS', // Bass
+  HO = 'HO', // Hi-hat open
+  ST = 'ST', // Stab
+  PD = 'PD', // Pad
+  RD = 'RD', // Ride
+  SN = 'SN', // Snare
+  FX = 'FX', // Effect
+  DL = 'DL', // Drum loop
 }
 
 export const all = [
@@ -22,6 +24,8 @@ export const all = [
   InstrumentKey.PD,
   InstrumentKey.RD,
   InstrumentKey.SN,
+  InstrumentKey.DL,
+  InstrumentKey.FX,
 ]
 
 export default {
@@ -35,4 +39,6 @@ export default {
   PD: InstrumentKey.PD,
   RD: InstrumentKey.RD,
   SN: InstrumentKey.SN,
+  FX: InstrumentKey.FX,
+  DL: InstrumentKey.DL,
 }

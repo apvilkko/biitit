@@ -8,6 +8,7 @@ import {
 import retrowavePreset from './retrowave'
 import technoPreset from './techno'
 import deephousePreset from './deephouse'
+import dnbPreset from './dnb'
 
 // TODO ability to enable/disable tracks
 
@@ -15,6 +16,7 @@ const PRESETS: Record<PresetName, PresetSpec> = {
   techno: technoPreset,
   retrowave: retrowavePreset,
   deephouse: deephousePreset,
+  dnb: dnbPreset,
 }
 
 const SCENE_PRESETS = Object.keys(PRESETS)

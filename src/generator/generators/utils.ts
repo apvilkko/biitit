@@ -1,7 +1,7 @@
 import { ROOT_NOTE, NOTE_LENGTH } from '../constants'
 import fills from './fills'
 import { rand, sample, randFloat } from '../../utils'
-import { GeneratorState } from '../../types'
+import { GeneratorState, NoteGetter, PreFn, Scene, UpdateFn } from '../../types'
 
 const { quarter, bar } = NOTE_LENGTH
 
@@ -13,14 +13,17 @@ const isLastOf = (small, large) => (currentNote, exact?: boolean) => {
   return exact ? modulo === delta : modulo >= delta
 }
 
-const createPatternGenerator = (patLength, pre, noteGetter, noOff, update) => (
-  style,
-  scene
-) =>
+const createPatternGenerator = <T extends { inFill: boolean }>(
+  patLength,
+  pre: PreFn<T>,
+  noteGetter: NoteGetter<T>,
+  noOff,
+  update: UpdateFn<T>
+) => (style, scene: Scene) =>
   function* patternGenerator() {
     let currentNote = 0
     const pattern = createArray(patLength)
-    const data = pre ? pre({ style, scene }) || {} : {}
+    const data: T = pre ? pre({ style, scene }) || ({} as T) : ({} as T)
     while (true) {
       let note
       const position = currentNote % patLength
@@ -108,7 +111,7 @@ const createBasePitchedNoteGenerator = (opts) =>
             root +
             (rand(1, 100) < (opts.probs[i].prob || opts.rootProb || 50)
               ? 0
-              : sample(opts.probs[i].choices || opts.choices))
+              : (sample(opts.probs[i].choices || opts.choices) as number))
           return {
             note: pitch,
             instrument,

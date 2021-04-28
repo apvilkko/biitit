@@ -1,6 +1,7 @@
 import { getRateFromPitch } from '../core/math'
 import loadBuffer from './loadBuffer'
 import { ROOT_NOTE } from '../generator/constants'
+import { Note } from '../types'
 
 const create = (ctx, sampleSpec, inserts, polyphony) => {
   let bufferSource
@@ -21,9 +22,10 @@ const create = (ctx, sampleSpec, inserts, polyphony) => {
     }
   }
 
-  const noteOn = (note, atTime) => {
+  const noteOn = (note: Note, atTime: number) => {
     const pitch = note.note
     const time = atTime || ctx.currentTime
+    const offset = note.time || 0
     if (!buffer) {
       return
     }
@@ -31,12 +33,12 @@ const create = (ctx, sampleSpec, inserts, polyphony) => {
     bufferSource.buffer = buffer
     bufferSource.connect(vca)
     if (pitch !== 0) {
-      bufferSource.playbackRate.setValueAtTime(
-        getRateFromPitch(pitch - ROOT_NOTE),
-        time
-      )
+      const playbackRate = note.rate
+        ? note.rate
+        : getRateFromPitch(pitch - ROOT_NOTE)
+      bufferSource.playbackRate.setValueAtTime(playbackRate, time)
     }
-    bufferSource.start(time)
+    bufferSource.start(time, offset)
     vca.gain.setValueAtTime(note.velocity || 1, time)
   }
 

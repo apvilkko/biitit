@@ -26,18 +26,50 @@ export interface InstantiatedGenerator {
 
 export type Instrument = any
 
-export interface SampleSpec {
+export type SimpleSampleSpec = {
   amount: number
-  index: number
-  name: string
-  style: string
 }
+
+export type Indexed = { index: number }
+
+export type SampleSpec = SimpleSampleSpec &
+  Indexed & {
+    name: string
+    style: string
+  }
+
+export type DrumloopItemSpec = {
+  name: string
+  bars: number
+  bpm: number
+  hits: string
+  gain?: number
+}
+
+export type Style = string
+export type SampleKey = string
+
+export type DrumloopSampleSpec = Array<DrumloopItemSpec>
+
+export type CatalogItemType = {
+  style: Style
+  name: SampleKey
+  spec?: DrumloopSampleSpec
+} & Partial<SimpleSampleSpec>
+
+export type DrumloopIndexedSampleSpec = DrumloopItemSpec &
+  CatalogItemType & { hitmap: HitmapItem[] } & Indexed
+
+export type DrumloopSceneSampleSpec = DrumloopIndexedSampleSpec
+
+export type SceneSampleSpec = DrumloopSceneSampleSpec | SampleSpec
 
 export interface InstanceSpec {
   pan: number
   pitch: number
-  sample: SampleSpec
+  sample: SceneSampleSpec
   volume: number
+  variant?: string
 }
 
 export interface InstrumentSpec {
@@ -127,6 +159,7 @@ export interface GeneratorPresetObjOptions {
   extraMaxVelocity?: number
   noOff?: boolean
   patLength?: Array<number>
+  index?: number
 }
 
 export type GeneratorPresetOptions = number | GeneratorPresetObjOptions
@@ -136,10 +169,16 @@ export type GeneratorPresetRandomizerSpec = [
   GeneratorPresetOptions
 ]
 
+export type PresetRandomizerSpec = {
+  gain: number | ValueRandomizerSpec
+  polyphony?: number
+  variant?: ValueRandomizerSpec
+}
+
 export interface PresetTrackSpec {
   type: InstrumentKey
   generator: ValueRandomizerSpec | GeneratorPresetRandomizerSpec
-  randomizer: { gain: number | ValueRandomizerSpec; polyphony?: number }
+  randomizer: PresetRandomizerSpec
   inserts?: Array<TrackEffectSpec>
   sends?: Array<TrackEffectSpec>
 }
@@ -166,6 +205,9 @@ export interface Note {
   velocity: number
   instrument: InstrumentKey
   note: number
+  time?: number
+  rate?: number
+  hit?: string
 }
 
 type CommonNote = Partial<Note>
@@ -180,3 +222,32 @@ export interface Filler {
     state: GeneratorState,
   }): [Note, GeneratorState?]
 }
+
+export type HitmapItem = {
+  index: number
+  hit: string
+  time: number
+}
+
+export type Hitmap = HitmapItem[]
+
+export type NoteGetterParams<T> = {
+  currentNote: number
+  position: number
+  patLength: number
+  pattern: Array<unknown>
+  scene: Scene
+  style: string
+  data: T
+}
+
+export type NoteGetter<T> = (x: NoteGetterParams<T>) => Note
+
+export type PreFnParams = {
+  style: string
+  scene: Scene
+}
+
+export type PreFn<T> = (PreFnParams) => T
+
+export type UpdateFn<T> = (data: T, currentNote: number) => void

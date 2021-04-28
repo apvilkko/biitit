@@ -2,13 +2,15 @@ const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 const entry = './src/index.ts'
-const publicPath = process.env.NODE_ENV === 'production' ? '/biitit/' : '/'
+const isProd = process.env.NODE_ENV === 'production'
+const publicPath = isProd ? '/biitit/' : '/'
+const mode = isProd ? 'production' : 'development'
 
 module.exports = {
-  mode: 'development',
+  mode,
   entry: ['@babel/polyfill', entry],
   output: {
-    filename: 'bundle.[hash].js',
+    filename: 'bundle.[fullhash].js',
     path: path.resolve(__dirname, './dist'),
     publicPath,
   },
@@ -28,7 +30,7 @@ module.exports = {
       },
       {
         test: /\.tsx?$/,
-        use: 'ts-loader',
+        loader: 'ts-loader',
         exclude: /node_modules/,
       },
       {

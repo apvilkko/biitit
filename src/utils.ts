@@ -13,12 +13,12 @@ export const randWeighted = (choices, weights) => {
   }
 }
 
-export const sample = (arr) =>
+export const sample = <T>(arr: Array<T>): T | undefined =>
   arr.length > 0 ? arr[rand(0, arr.length - 1)] : undefined
 
-export const shuffle = (arr) =>
+export const shuffle = <T>(arr: Array<T>): Array<T> =>
   arr
-    .map((a) => [Math.random(), a])
+    .map((a): [number, T] => [Math.random(), a])
     .sort((a, b) => a[0] - b[0])
     .map((a) => a[1])
 
@@ -56,3 +56,6 @@ export const maybe = (prob?: number | MaybeObjectShape | {}, opt1?, opt2?) => {
   })
   return chosen
 }
+
+export const takeRandom = <T>(num: number, arr: Array<T>): Array<T> =>
+  shuffle(arr).slice(0, num)

@@ -18,8 +18,9 @@ import {
   GeneratorDefinition,
 } from '../../types'
 import instruments, { InstrumentKey } from '../instruments'
+import { dnbDrumloop, dnbStab, dnbSub } from './dnb'
 
-const { BD, CP, HC, PR, HO, BS, PD, ST, SN } = instruments
+const { BD, CP, HC, PR, HO, BS, PD, ST, SN, DL, FX } = instruments
 
 const generators: Record<GeneratorName, GeneratorDefinition> = {
   'drums/fourbyfour': { generator: fourbyfour, for: [BD, CP, HC] },
@@ -37,9 +38,13 @@ const generators: Record<GeneratorName, GeneratorDefinition> = {
   'drums/retrowave-breakbeat': { generator: retrowaveBreakbeat, for: [BD] },
   'drums/retrowave-syncopated': { generator: retrowaveSyncopated, for: [BD] },
   'drums/techno-broken': { generator: teBroken, for: [BD, CP, SN] },
+  'stab/dnb': { generator: dnbStab, for: [ST] },
+  'drumloop/dnb': { generator: dnbDrumloop, for: [DL] },
+  'bass/dnb': { generator: dnbSub, for: [BS] },
+  'fx/dnb': { generator: dnbStab, for: [FX, ST] },
 }
 
-const all = {}
+export const all = {}
 Object.keys(generators).forEach((key) => {
   all[key] = {
     ...generators[key],
@@ -47,7 +52,7 @@ Object.keys(generators).forEach((key) => {
   }
 })
 
-const getRandomGenerator = (
+export const getRandomGenerator = (
   suitableFor: Array<InstrumentKey>
 ): GeneratorFactory => {
   let choices = []
@@ -65,5 +70,3 @@ const getRandomGenerator = (
   }
   return all[sample(choices)]
 }
-
-export { all as default, getRandomGenerator }

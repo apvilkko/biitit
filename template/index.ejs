@@ -7,7 +7,7 @@
       content="width=device-width,initial-scale=1,shrink-to-fit=no"
     />
     <meta name="theme-color" content="#000000" />
-    <title><%= htmlWebpackPlugin.options.title %></title>
+    <%= htmlWebpackPlugin.tags.headTags %>
     <link
       href="https://fonts.googleapis.com/css?family=PT+Sans+Narrow&display=swap"
       rel="stylesheet"
@@ -18,11 +18,6 @@
       <button id="start">Start</button>
     </div>
     <div id="content"></div>
-    <% for (var css in htmlWebpackPlugin.files.css) { %><link
-      href="<%= htmlWebpackPlugin.files.css[css] %>"
-      rel="stylesheet"
-    /><% } %> <% for (var chunk in htmlWebpackPlugin.files.chunks) { %>
-    <script src="<%= htmlWebpackPlugin.files.chunks[chunk].entry %>"></script>
-    <% } %>
+    <%= htmlWebpackPlugin.tags.bodyTags %>
   </body>
 </html>
