@@ -29,7 +29,7 @@ const filler: Filler = ({ currentNote, common, spec, state }) => {
   }
 
   if (isNextInFill && currentNote % sixteenth === 0 && rand(1, 100) > 60) {
-    out = { ...common, velocity: spec.volume * randFloat(0.5, 1.0) }
+    out = { ...common, velocity: spec.volume * randFloat(0.5, 1.0) } as Note
   }
 
   return [out, newState]

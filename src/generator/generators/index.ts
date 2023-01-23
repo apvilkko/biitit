@@ -9,8 +9,8 @@ import sparse from './drums/sparse'
 import nonbeats from './drums/nonbeats'
 import { dhBass, dhPad, dhStab } from './deephouse'
 import deephouseCl from './drums/deephouse-cl'
-import retrowaveBreakbeat from './drums/retrowave-breakbeat'
-import retrowaveSyncopated from './drums/retrowave-syncopated'
+import { retrowaveBreakbeat } from './drums/retrowave-breakbeat'
+import { retrowaveSyncopated } from './drums/retrowave-syncopated'
 import { teBroken } from './techno'
 import {
   GeneratorFactory,
@@ -19,6 +19,7 @@ import {
 } from '../../types'
 import instruments, { InstrumentKey } from '../instruments'
 import { dnbDrumloop, dnbStab, dnbSub } from './dnb'
+import { retrowaveHc } from './drums/retrowave-hc'
 
 const { BD, CP, HC, PR, HO, BS, PD, ST, SN, DL, FX } = instruments
 
@@ -37,6 +38,7 @@ const generators: Record<GeneratorName, GeneratorDefinition> = {
   'drums/deephouse-cl': { generator: deephouseCl, for: [CP] },
   'drums/retrowave-breakbeat': { generator: retrowaveBreakbeat, for: [BD] },
   'drums/retrowave-syncopated': { generator: retrowaveSyncopated, for: [BD] },
+  'drums/retrowave-hc': { generator: retrowaveHc, for: [HC] },
   'drums/techno-broken': { generator: teBroken, for: [BD, CP, SN] },
   'stab/dnb': { generator: dnbStab, for: [ST] },
   'drumloop/dnb': { generator: dnbDrumloop, for: [DL] },

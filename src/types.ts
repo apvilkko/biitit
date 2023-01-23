@@ -8,10 +8,12 @@ export type GeneratorName = string
 
 export type GeneratorGenerator = Generator<any, any, any>
 
+export type GeneratorInterface = (
+  genOpts
+) => (genName: GeneratorName, scene: Scene) => () => GeneratorGenerator
+
 export interface GeneratorDefinition {
-  generator: (
-    genOpts
-  ) => (genName: GeneratorName, scene: Scene) => () => GeneratorGenerator
+  generator: GeneratorInterface
   for: Array<InstrumentKey>
 }
 
@@ -216,10 +218,15 @@ export type GeneratorState = Record<string, any>
 
 export interface Filler {
   ({
-    currentNote: number,
-    common: CommonNote,
-    spec: InstanceSpec,
-    state: GeneratorState,
+    currentNote,
+    common,
+    spec,
+    state,
+  }: {
+    currentNote: number
+    common: CommonNote
+    spec: InstanceSpec
+    state: GeneratorState
   }): [Note, GeneratorState?]
 }
 
@@ -244,7 +251,7 @@ export type NoteGetterParams<T> = {
 export type NoteGetter<T> = (x: NoteGetterParams<T>) => Note
 
 export type PreFnParams = {
-  style: string
+  style?: string
   scene: Scene
 }
 

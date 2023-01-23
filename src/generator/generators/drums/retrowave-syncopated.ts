@@ -1,10 +1,11 @@
 import { createDrumGenerator } from '../utils'
 import { randLt, rand, sample } from '../../../utils'
 import { NOTE_LENGTH } from '../../constants'
+import { GeneratorInterface } from '../../../types'
 
 const { sixteenth, bar, quarter } = NOTE_LENGTH
 
-export default (opts) =>
+export const retrowaveSyncopated: GeneratorInterface = (opts) =>
   createDrumGenerator(
     opts,
     ({ currentNote, spec, common, data }) => {
@@ -29,7 +30,7 @@ export default (opts) =>
       }
       return null
     },
-    ({ scene }) => {
+    () => {
       const cycleLen = sample([2, 4]) * bar
       const syncopatePosition = randLt(50) ? 0 : cycleLen / 2
       const syncLen = rand(3 * sixteenth, 6 * sixteenth)

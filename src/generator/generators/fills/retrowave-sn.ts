@@ -37,9 +37,9 @@ const filler: Filler = ({ currentNote, common, spec, state }) => {
         ? 50
         : 80
     if (currentNote % sixteenth === 0 && rand(1, 100) > prob) {
-      out = { ...common, velocity: spec.volume * randFloat(0.3, 0.95) }
+      out = { ...common, velocity: spec.volume * randFloat(0.3, 0.95) } as Note
     } else if (currentNote % (2 * quarter) === quarter && randLt(85)) {
-      out = { ...common, velocity: spec.volume * randFloat(0.9, 1.0) }
+      out = { ...common, velocity: spec.volume * randFloat(0.9, 1.0) } as Note
     }
   }
 

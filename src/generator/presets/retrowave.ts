@@ -97,6 +97,32 @@ const PRESET: PresetSpec = {
       inserts: [COMPRESSOR],
       sends: [REVERB2],
     },
+    {
+      type: HC,
+      generator: {
+        maybe: {
+          32: [
+            'drums/retrowave-hc',
+            {
+              style: '16th',
+            },
+          ],
+          33: [
+            'drums/retrowave-hc',
+            {
+              style: '8th',
+            },
+          ],
+          rest: [
+            'drums/retrowave-hc',
+            {
+              style: 'three',
+            },
+          ],
+        },
+      },
+      randomizer: { gain: { min: 0.1, max: 0.15 } },
+    },
   ],
 }
 

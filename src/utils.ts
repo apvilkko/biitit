@@ -1,10 +1,11 @@
 import { MaybeObjectShape } from './types'
 
-export const rand = (min, max) =>
+export const rand = (min: number, max: number): number =>
   min + Math.floor(Math.random() * (max - min + 1))
-export const randFloat = (min, max) => min + Math.random() * (max - min)
+export const randFloat = (min: number, max: number): number =>
+  min + Math.random() * (max - min)
 
-export const randWeighted = (choices, weights) => {
+export const randWeighted = <T>(choices: T[], weights: number[]): T => {
   let sum = 0
   const r = Math.random()
   for (let i = 0; i < choices.length; ++i) {
@@ -22,15 +23,17 @@ export const shuffle = <T>(arr: Array<T>): Array<T> =>
     .sort((a, b) => a[0] - b[0])
     .map((a) => a[1])
 
-export const sampleN = (n) => (arr) => {
-  const shuffled = shuffle(arr)
-  return shuffled.slice(0, n)
-}
+export const sampleN =
+  (n: number) =>
+  <T>(arr: T[]): T[] => {
+    const shuffled = shuffle(arr)
+    return shuffled.slice(0, n)
+  }
 
-export const isObject = (obj) =>
+export const isObject = (obj: unknown): boolean =>
   Object.prototype.toString.call(obj) === '[object Object]'
 
-export const randLt = (value) => Math.random() < value / 100.0
+export const randLt = (value: number): boolean => Math.random() < value / 100.0
 
 export const maybe = (prob?: number | MaybeObjectShape | {}, opt1?, opt2?) => {
   if (typeof prob === 'number') {
