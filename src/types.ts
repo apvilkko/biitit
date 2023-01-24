@@ -145,10 +145,24 @@ export interface MaybeSpec {
   maybe: [number, MaybeParameter, MaybeParameter] | MaybeObjectShape
 }
 
+export type SpecRef = { ref: string }
+export type Equality = {
+  eq: [SpecRef | ScalarOrRandSpec, SpecRef | ScalarOrRandSpec]
+}
+export type OrClause = { or: [Condition, Condition] }
+export type Condition = Equality | OrClause
+
+export type ConditionalSpec = {
+  if: [Condition, ScalarOrRandSpec, ScalarOrRandSpec]
+}
+
+export type ScalarOrRandSpec = ValueRandomizerSpec | boolean | string | number
+
 export type ValueRandomizerSpec =
   | RangedValueSpec
   | MaybeSpec
   | SampleRandomizerSpec
+  | ConditionalSpec
 
 export interface TrackEffectSpec extends Record<string, any> {
   name: string
@@ -171,10 +185,13 @@ export type GeneratorPresetRandomizerSpec = [
   GeneratorPresetOptions
 ]
 
+export type SynthParamsSpec = Record<string, ScalarOrRandSpec>
+
 export type PresetRandomizerSpec = {
   gain: number | ValueRandomizerSpec
   polyphony?: number
   variant?: ValueRandomizerSpec
+  synth?: SynthParamsSpec
 }
 
 export interface PresetTrackSpec {
@@ -183,6 +200,7 @@ export interface PresetTrackSpec {
   randomizer: PresetRandomizerSpec
   inserts?: Array<TrackEffectSpec>
   sends?: Array<TrackEffectSpec>
+  refs?: Record<string, ScalarOrRandSpec>
 }
 
 export type EffectName = string

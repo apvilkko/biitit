@@ -156,14 +156,17 @@ type SampleSpec = (CatalogItemType & Indexed) | DrumloopIndexedSampleSpec
 const isDrumloopSpec = (
   catalogItem: CatalogItemType
 ): catalogItem is DrumloopIndexedSampleSpec => {
-  return Array.isArray(catalogItem.spec)
+  return catalogItem && Array.isArray(catalogItem.spec)
 }
 
-const getRandomSample = (key, sampleGroup): SampleSpec => {
+const getRandomSample = (key, sampleGroup): SampleSpec | undefined => {
   const choices = sampleGroup
     ? CATALOG[key].filter((x) => x.style === sampleGroup)
     : CATALOG[key]
   const styleSpec = sample(choices)
+  if (!styleSpec) {
+    return undefined
+  }
   let index = 1
   let sampleSpec = styleSpec
   if (!isDrumloopSpec(sampleSpec)) {

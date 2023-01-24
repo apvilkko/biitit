@@ -1,7 +1,10 @@
 import all from '../instruments'
 import { PresetSpec } from '../../types'
+import { NOTE_LENGTH } from '../constants'
+import { sample } from '../../utils'
 
 const { BD, HC, CP, PR, BS, PD, ST, SN, RD, HO } = all
+const { bar } = NOTE_LENGTH
 
 const CHORD_PRESETS = [
   [0, 0, -2, -4],
@@ -21,6 +24,15 @@ const COMPRESSOR = {
 }
 const REVERB1 = { name: 'reverb', wet: { min: 0.3, max: 0.5 } }
 const REVERB2 = { name: 'reverb', wet: { min: 0.5, max: 0.7 } }
+
+const BASS_STYLES = [
+  '16th', // single note 16ths
+  '16thOct', // like 16th but octave is changed
+  // 'arp', // like 16th but variation in notes
+  'offbeat', // 8th on the offbeat only
+  '8th', // single note 8ths
+  // 'ifeellove', // note changes on 8th, 16ths
+]
 
 const PRESET: PresetSpec = {
   /**
@@ -122,6 +134,43 @@ const PRESET: PresetSpec = {
         },
       },
       randomizer: { gain: { min: 0.1, max: 0.15 } },
+    },
+    {
+      type: BS,
+      generator: ['bass/deephouse', { noOff: true, patLength: [bar, 2 * bar] }],
+      refs: {
+        style: { sample: BASS_STYLES },
+      },
+      randomizer: {
+        polyphony: 1,
+        gain: 0.53,
+        synth: {
+          oscType0: { sample: ['sawtooth', 'square'] },
+          oscOn0: true,
+          oscOn1: false,
+          lfoAmount0: 0.1,
+          lfoAmount1: 0.1,
+          filterFreq: 800,
+          filterQ: 1,
+          aEnvAttack: 0.005,
+          aEnvRelease: {
+            if: [
+              {
+                or: [
+                  { eq: [{ ref: 'style' }, 'offbeat'] },
+                  { eq: [{ ref: 'style' }, '8th'] },
+                ],
+              },
+              { min: 0.3, max: 0.4 },
+              { min: 0.09, max: 0.2 },
+            ],
+          },
+          aEnvDecay: 0.2,
+          eqFrequency: 100,
+          eqGain: 6,
+          eqQ: 2,
+        },
+      },
     },
   ],
 }

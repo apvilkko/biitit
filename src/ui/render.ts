@@ -3,10 +3,14 @@ import { all } from '../generator/generators'
 import CATALOG from '../generator/catalog'
 import { SCENE_PRESETS } from '../generator/presets'
 
-const getSampleLabel = (spec) =>
-  `${spec.pre ? spec.pre + '_' : ''}${spec.name}${
+const getSampleLabel = (spec) => {
+  if (!spec) {
+    return 'N/A'
+  }
+  return `${spec.pre ? spec.pre + '_' : ''}${spec.name}${
     typeof spec.index === 'number' ? spec.index : ''
   }(${spec.style})`
+}
 
 const prepareSampleList = () => {
   const choices = []

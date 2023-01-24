@@ -19,6 +19,13 @@ import {
   RangedValueSpec,
   PresetRandomizerSpec,
   SampleRandomizerSpec,
+  PresetTrackSpec,
+  ScalarOrRandSpec,
+  ConditionalSpec,
+  Condition,
+  OrClause,
+  Equality,
+  SpecRef,
 } from '../types'
 
 const { BD, CP, HC, PR, HO, BS, PD, ST, SN, RD, DL, FX } = instruments
@@ -141,15 +148,45 @@ const randomizeGenerators = (preset) => {
   }
 }
 
-const randFromSpec = (spec: number | ValueRandomizerSpec) => {
+const ifSpec = (spec: ConditionalSpec['if'], refs) => {
+  const cond = randFromSpec(spec[0], refs)
+  const v1 = randFromSpec(spec[1], refs)
+  const v2 = randFromSpec(spec[2], refs)
+  return cond ? v1 : v2
+}
+
+const orSpec = (spec: OrClause['or'], refs) => {
+  return randFromSpec(spec[0], refs) || randFromSpec(spec[1], refs)
+}
+
+const eqSpec = (spec: Equality['eq'], refs) => {
+  return randFromSpec(spec[0], refs) == randFromSpec(spec[1], refs)
+}
+
+const randFromSpec = (
+  spec: number | ValueRandomizerSpec | ScalarOrRandSpec | Condition | SpecRef,
+  refs?: Record<string, number | string | boolean>
+) => {
   if (spec === undefined || spec === null) {
     return spec
   }
-  if (spec === 0 || typeof spec === 'number') {
+  if (spec === 0 || typeof spec === 'number' || typeof spec == 'boolean') {
     return spec
   }
   if (!spec) {
     return null
+  }
+  if ((spec as ConditionalSpec).if) {
+    return ifSpec((spec as ConditionalSpec).if, refs)
+  }
+  if ((spec as OrClause).or) {
+    return orSpec((spec as OrClause).or, refs)
+  }
+  if ((spec as Equality).eq) {
+    return eqSpec((spec as Equality).eq, refs)
+  }
+  if ((spec as SpecRef).ref) {
+    return refs ? randFromSpec(refs[(spec as SpecRef).ref], refs) : null
   }
   const mSpec = spec as MaybeSpec
   if (mSpec.maybe) {
@@ -163,6 +200,12 @@ const randFromSpec = (spec: number | ValueRandomizerSpec) => {
   if (sSpec.sample) {
     return sample(sSpec.sample)
   }
+  if (isObject(spec)) {
+    return Object.keys(spec).reduce((acc, curr) => {
+      acc[curr] = randFromSpec(spec[curr])
+      return acc
+    }, {})
+  }
   return null
 }
 
@@ -173,7 +216,6 @@ const drumRandomizer = (instrument, sampleGroup?: string, opts?) => () => {
       sample: getRandomSample(instrument, sampleGroup),
       pan: randFloat(-0.05, 0.05),
       pitch: randFloat(-3, 3),
-      //style: sample(drumStyles[instrument] || [])
       ...options,
       volume: 1.0,
     },
@@ -182,20 +224,43 @@ const drumRandomizer = (instrument, sampleGroup?: string, opts?) => () => {
   return {
     specs,
     reverbImpulse,
-    perc: rand(1, 100) > 33,
+    gain: options.gain || 0.6,
+  }
+}
+
+const synthRandomizer = (instrument, sampleGroup?, opts?) => () => {
+  const options = opts || {}
+  const specs = {
+    [instrument]: {
+      pan: randFloat(-0.05, 0.05),
+      ...options,
+      volume: 1.0,
+    },
+  }
+  const reverbImpulse = getRandomSample('impulse', sampleGroup)
+  return {
+    specs,
+    reverbImpulse,
     gain: options.gain || 0.6,
   }
 }
 
 let randomizers = {}
 
-const specify = (x: PresetRandomizerSpec) => {
+const specify = (x: PresetRandomizerSpec, refs?: PresetTrackSpec['refs']) => {
   if (!x) {
     return x
   }
+  let processedRefs = {}
+  if (refs) {
+    processedRefs = Object.keys(refs).reduce((acc, curr) => {
+      acc[curr] = randFromSpec(refs[curr])
+      return acc
+    }, {})
+  }
   const out = {}
   Object.keys(x).forEach((key) => {
-    out[key] = randFromSpec(x[key])
+    out[key] = randFromSpec(x[key], processedRefs)
   })
   return out
 }
@@ -206,10 +271,14 @@ const setupRandomizers = (preset) => {
     preset.tracks.forEach((trackSpec, i) => {
       const key = trackSpec.type
       // TODO preset ability to use "wrong" samples
-      randomizers[`${key}-${i}`] = drumRandomizer(
+      let randomizer = drumRandomizer
+      if (trackSpec.randomizer.synth) {
+        randomizer = synthRandomizer
+      }
+      randomizers[`${key}-${i}`] = randomizer(
         key,
         preset.name,
-        specify(trackSpec.randomizer)
+        specify(trackSpec.randomizer, trackSpec.refs)
       )
     })
   } else {

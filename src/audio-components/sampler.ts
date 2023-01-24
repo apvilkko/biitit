@@ -6,9 +6,11 @@ import { Note } from '../types'
 const create = (ctx, sampleSpec, inserts, polyphony) => {
   let bufferSource
   let buffer = null
-  loadBuffer(ctx, sampleSpec).then((ret) => {
-    buffer = ret
-  })
+  if (sampleSpec) {
+    loadBuffer(ctx, sampleSpec).then((ret) => {
+      buffer = ret
+    })
+  }
   const output = ctx.createGain()
   const vca = ctx.createGain()
   if (!inserts || inserts.length === 0) {
