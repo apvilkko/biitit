@@ -544,6 +544,7 @@ const randomize = (setState, presetName?: string): Scene => {
     generators: [],
     instances: [],
     rootNoteOffset: rand(-4, 4),
+    chords: preset ? randFromSpec(preset.chords) : null,
     masterInserts:
       preset && preset.masterInserts
         ? preset.masterInserts.map(normalizeSpec)

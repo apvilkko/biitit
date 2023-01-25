@@ -38,6 +38,7 @@ const PRESET: PresetSpec = {
   name: 'retrowave',
   tempo: { min: 100, max: 125 },
   shufflePercentage: 0,
+  chords: { sample: CHORD_PRESETS },
   tracks: [
     {
       type: BD,
@@ -148,6 +149,7 @@ const PRESET: PresetSpec = {
             ],
           },
           aEnvDecay: 0.2,
+          aEnvSustain: 0.5,
           eqFrequency: 100,
           eqGain: 6,
           eqQ: 2,

@@ -72,6 +72,7 @@ export interface InstanceSpec {
   sample: SceneSampleSpec
   volume: number
   variant?: string
+  refs?: Record<string, ScalarOrRandSpec>
 }
 
 export interface InstrumentSpec {
@@ -115,6 +116,7 @@ export interface Scene {
   instruments: Array<InstrumentSpec>
   generators: Array<InstantiatedGenerator>
   masterInserts?: Array<MasterInsertSpec>
+  chords?: number[]
 }
 
 export interface Context {
@@ -219,6 +221,7 @@ export interface PresetSpec {
   tracks: Array<PresetTrackSpec>
   masterInserts?: Array<PresetMasterInsertSpec>
   noteChoices?: Partial<Record<InstrumentKey, Array<number>>>
+  chords?: ValueRandomizerSpec
 }
 
 export interface Note {

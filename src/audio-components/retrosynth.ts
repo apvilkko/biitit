@@ -2,7 +2,7 @@ import createVco from './vco'
 import { noteToFreq } from '../core/math'
 import { ads, r } from './envelope'
 
-const create = (ctx) => {
+const create = (ctx: AudioContext) => {
   const vcos = [createVco(ctx), createVco(ctx)]
   const vcas = [ctx.createGain(), ctx.createGain()]
   const maxGain = 0.5
@@ -86,6 +86,9 @@ const create = (ctx) => {
     aEnvRelease: (value) => {
       aRelease = value
     },
+    aEnvSustain: (value) => {
+      aSustain = value
+    },
     fEnvRelease: (value) => {
       fEnvRelease = value
     },
@@ -115,6 +118,7 @@ const create = (ctx) => {
   }
 
   const setParam = (param, value, atTime) => {
+    console.log('setParam', param, value, atTime)
     const time = atTime || ctx.currentTime
     let match
     if (paramHandlers[param]) {
@@ -131,6 +135,7 @@ const create = (ctx) => {
   }
 
   return {
+    gain: output,
     vcos,
     vcas,
     output,

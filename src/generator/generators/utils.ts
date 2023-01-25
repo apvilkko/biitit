@@ -13,6 +13,8 @@ const isLastOf = (small, large) => (currentNote, exact?: boolean) => {
   return exact ? modulo === delta : modulo >= delta
 }
 
+export const mod = (n, m) => ((n % m) + m) % m
+
 const createPatternGenerator =
   <T extends { inFill: boolean }>(
     patLength,
