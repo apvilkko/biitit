@@ -196,7 +196,7 @@ export type PresetRandomizerSpec = {
 
 export interface PresetTrackSpec {
   type: InstrumentKey
-  generator: ValueRandomizerSpec | GeneratorPresetRandomizerSpec
+  generator: GeneratorName | ValueRandomizerSpec | GeneratorPresetRandomizerSpec
   randomizer: PresetRandomizerSpec
   inserts?: Array<TrackEffectSpec>
   sends?: Array<TrackEffectSpec>

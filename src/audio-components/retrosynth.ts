@@ -44,7 +44,7 @@ const create = (ctx) => {
 
   const noteOn = (note, atTime) => {
     const time = atTime || ctx.currentTime
-    // console.log('noteOn', time, time + aAttack);
+    //console.log('noteOn', time, time + aAttack)
     vcos.forEach((vco) => {
       const freq = noteToFreq(note.note, vco.detune)
       vco.setFreq(freq, atTime)
@@ -65,7 +65,7 @@ const create = (ctx) => {
 
   const noteOff = (note, atTime) => {
     const time = atTime || ctx.currentTime
-    // console.log('noteOff', time, time + aRelease);
+    //console.log('noteOff', time, time + aRelease)
     vcas.forEach((vca) => {
       r(vca.gain, time, aRelease)
     })

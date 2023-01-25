@@ -7,18 +7,21 @@ const { sixteenth, eighth, quarter } = NOTE_LENGTH
 
 const { HC } = instruments
 
+export const HC_STYLES = ['16th', '8th', 'three']
+
 export const retrowaveHc: GeneratorInterface = (opts) => {
-  const hhStyle = opts.style ?? sample(['8th', '16th', 'three'])
+  const fallbackStyle = sample(HC_STYLES)
 
   return createDrumGenerator(
     opts,
     ({ currentNote, spec, common, data: { choices } }) => {
+      const style = spec?.refs?.style ?? fallbackStyle
       const condition =
-        hhStyle === '8th'
+        style === '8th'
           ? currentNote % eighth === 0
-          : hhStyle === '16th'
+          : style === '16th'
           ? currentNote % sixteenth === 0
-          : hhStyle === 'three'
+          : style === 'three'
           ? choices
               .map((x) => currentNote % quarter === x * sixteenth)
               .some((x) => !!x)

@@ -3,6 +3,7 @@ import { rand, randFloat, isObject, maybe, randLt, sample } from '../utils'
 import sampler from '../audio-components/sampler'
 import compressor from '../audio-components/compressor'
 import reverb from '../audio-components/reverb'
+import retrosynth from '../audio-components/retrosynth'
 import stereoDelay from '../audio-components/stereoDelay'
 import waveshaper from '../audio-components/waveshaper'
 import { getRandomSample } from './catalog'
@@ -80,7 +81,55 @@ const cleanup = (context: Context, index?: number) => {
 }
 
 const createInstrumentInstance = (context, instrument, specs) => {
+  console.log('createInstrumentInstance', instrument, specs)
+
+  const handle = (isSynth) => {
+    console.log(instrument, isSynth)
+    const polyphony = specs.specs[instrument].polyphony
+    const shouldComp = false
+    const shouldRev = false
+    const wetRev = false
+    const inserts = []
+    if (shouldRev) {
+      inserts.push(
+        reverb(context.mixer.ctx, {
+          impulse: specs.reverbImpulse,
+          dry: 1,
+          wet: wetRev ? randFloat(0.5, 0.7) : randFloat(0.3, 0.5),
+        })
+      )
+    }
+    if (shouldComp) {
+      inserts.push(
+        compressor(context.mixer.ctx, {
+          threshold: -15,
+          ratio: 6,
+          attack: 0.004,
+          release: 0.18,
+        })
+      )
+    }
+    let synth
+    if (isSynth) {
+      const params = specs.specs[instrument].synth
+      const synthFactory = params.name === 'retrosynth' ? retrosynth : null
+      if (!synthFactory) {
+        throw new Error('invalid synth name ' + params.name)
+      }
+      synth = retrosynth(context.mixer.ctx)
+      Object.keys(params).forEach((k) => {
+        synth.setParam(k, params[k])
+      })
+    } else {
+      const sampleSpec = specs.specs[instrument].sample
+      synth = sampler(context.mixer.ctx, sampleSpec, inserts, polyphony)
+    }
+
+    return synth
+  }
+
   switch (instrument) {
+    case BS:
     case BD:
     case CP:
     case HC:
@@ -93,33 +142,7 @@ const createInstrumentInstance = (context, instrument, specs) => {
     case DL:
     case FX:
     case RD: {
-      const sampleSpec = specs.specs[instrument].sample
-      const polyphony = specs.specs[instrument].polyphony
-      const shouldComp = false
-      const shouldRev = false
-      const wetRev = false
-      const inserts = []
-      if (shouldRev) {
-        inserts.push(
-          reverb(context.mixer.ctx, {
-            impulse: specs.reverbImpulse,
-            dry: 1,
-            wet: wetRev ? randFloat(0.5, 0.7) : randFloat(0.3, 0.5),
-          })
-        )
-      }
-      if (shouldComp) {
-        inserts.push(
-          compressor(context.mixer.ctx, {
-            threshold: -15,
-            ratio: 6,
-            attack: 0.004,
-            release: 0.18,
-          })
-        )
-      }
-      const synth = sampler(context.mixer.ctx, sampleSpec, inserts, polyphony)
-      return synth
+      return handle(!!specs.specs[instrument].synth)
     }
     default:
       console.error('no instance created for', instrument, specs)
@@ -170,7 +193,12 @@ const randFromSpec = (
   if (spec === undefined || spec === null) {
     return spec
   }
-  if (spec === 0 || typeof spec === 'number' || typeof spec == 'boolean') {
+  if (
+    spec === 0 ||
+    typeof spec === 'number' ||
+    typeof spec == 'boolean' ||
+    typeof spec == 'string'
+  ) {
     return spec
   }
   if (!spec) {
@@ -230,6 +258,7 @@ const drumRandomizer = (instrument, sampleGroup?: string, opts?) => () => {
 
 const synthRandomizer = (instrument, sampleGroup?, opts?) => () => {
   const options = opts || {}
+  console.log('synthRandomizer', options)
   const specs = {
     [instrument]: {
       pan: randFloat(-0.05, 0.05),
@@ -278,7 +307,11 @@ const setupRandomizers = (preset) => {
       randomizers[`${key}-${i}`] = randomizer(
         key,
         preset.name,
-        specify(trackSpec.randomizer, trackSpec.refs)
+        Object.assign(
+          {},
+          { refs: specify(trackSpec.refs) },
+          specify(trackSpec.randomizer, trackSpec.refs)
+        )
       )
     })
   } else {

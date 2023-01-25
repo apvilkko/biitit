@@ -1,7 +1,11 @@
 import all from '../instruments'
 import { PresetSpec } from '../../types'
 import { NOTE_LENGTH } from '../constants'
-import { sample } from '../../utils'
+import { HC_STYLES } from '../generators/drums/retrowave-hc'
+import {
+  BASS_MOVEMENT_PRESETS,
+  BASS_STYLES,
+} from '../generators/bass/retrowave-bs'
 
 const { BD, HC, CP, PR, BS, PD, ST, SN, RD, HO } = all
 const { bar } = NOTE_LENGTH
@@ -24,15 +28,6 @@ const COMPRESSOR = {
 }
 const REVERB1 = { name: 'reverb', wet: { min: 0.3, max: 0.5 } }
 const REVERB2 = { name: 'reverb', wet: { min: 0.5, max: 0.7 } }
-
-const BASS_STYLES = [
-  '16th', // single note 16ths
-  '16thOct', // like 16th but octave is changed
-  // 'arp', // like 16th but variation in notes
-  'offbeat', // 8th on the offbeat only
-  '8th', // single note 8ths
-  // 'ifeellove', // note changes on 8th, 16ths
-]
 
 const PRESET: PresetSpec = {
   /**
@@ -111,40 +106,27 @@ const PRESET: PresetSpec = {
     },
     {
       type: HC,
-      generator: {
-        maybe: {
-          32: [
-            'drums/retrowave-hc',
-            {
-              style: '16th',
-            },
-          ],
-          33: [
-            'drums/retrowave-hc',
-            {
-              style: '8th',
-            },
-          ],
-          rest: [
-            'drums/retrowave-hc',
-            {
-              style: 'three',
-            },
-          ],
-        },
+      refs: {
+        style: { sample: HC_STYLES },
       },
+      generator: 'drums/retrowave-hc',
       randomizer: { gain: { min: 0.1, max: 0.15 } },
     },
     {
       type: BS,
-      generator: ['bass/deephouse', { noOff: true, patLength: [bar, 2 * bar] }],
+      generator: ['bass/retrowave', { noOff: true, patLength: [bar, 2 * bar] }],
       refs: {
         style: { sample: BASS_STYLES },
+        movement: {
+          sample: [...BASS_MOVEMENT_PRESETS, null, null, null, null],
+        },
+        movementSpeed: { sample: [bar, bar / 2] },
       },
       randomizer: {
         polyphony: 1,
         gain: 0.53,
         synth: {
+          name: 'retrosynth',
           oscType0: { sample: ['sawtooth', 'square'] },
           oscOn0: true,
           oscOn1: false,

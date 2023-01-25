@@ -113,6 +113,7 @@ const createBasePitchedNoteGenerator = (opts) =>
         if (opts.probs[i].probFn(currentNote)) {
           let pitch =
             root +
+            (opts.noteOffset || 0) +
             (rand(1, 100) < (opts.probs[i].prob || opts.rootProb || 50)
               ? 0
               : (sample(opts.probs[i].choices || opts.choices) as number))
