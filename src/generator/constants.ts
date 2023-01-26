@@ -17,3 +17,6 @@ export const NOTE_LENGTH = {
 }
 
 export const AEOLIAN = [0, 2, 3, 5, 7, 8, 10]
+const weights = [4, 0.5, 1.5, 1, 2, 0.5, 2]
+const wSum = weights.reduce((a, b) => a + b)
+export const WEIGHTS = weights.map((x) => x / wSum)

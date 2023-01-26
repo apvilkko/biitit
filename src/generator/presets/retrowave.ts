@@ -1,14 +1,15 @@
 import all from '../instruments'
 import { PresetSpec } from '../../types'
-import { NOTE_LENGTH } from '../constants'
+import { AEOLIAN, NOTE_LENGTH } from '../constants'
 import { HC_STYLES } from '../generators/drums/retrowave-hc'
 import {
   BASS_MOVEMENT_PRESETS,
   BASS_STYLES,
 } from '../generators/bass/retrowave-bs'
+import { LEAD_8TH_PRESETS } from '../generators/lead/retrowave-lead1'
 
-const { BD, HC, CP, PR, BS, PD, ST, SN, RD, HO } = all
-const { bar } = NOTE_LENGTH
+const { BD, HC, CP, PR, BS, SN, LD1 } = all
+const { bar, fourBars } = NOTE_LENGTH
 
 const CHORD_PRESETS = [
   [0, 0, -2, -4],
@@ -115,7 +116,7 @@ const PRESET: PresetSpec = {
     },
     {
       type: BS,
-      generator: ['bass/retrowave', { noOff: true, patLength: [bar, 2 * bar] }],
+      generator: ['bass/retrowave', { patLength: [fourBars] }],
       refs: {
         style: { sample: BASS_STYLES },
         movement: {
@@ -125,7 +126,7 @@ const PRESET: PresetSpec = {
       },
       randomizer: {
         polyphony: 1,
-        gain: 0.53,
+        gain: 0.65,
         synth: {
           name: 'retrosynth',
           oscType0: { sample: ['sawtooth', 'square'] },
@@ -149,10 +150,57 @@ const PRESET: PresetSpec = {
             ],
           },
           aEnvDecay: 0.2,
-          aEnvSustain: 0.5,
+          aEnvSustain: 0.9,
           eqFrequency: 100,
           eqGain: 6,
           eqQ: 2,
+        },
+      },
+    },
+    {
+      type: LD1,
+      generator: ['lead1/retrowave', { patLength: [fourBars] }],
+      refs: {
+        style: { sample: ['default', '8th'] },
+        addOctave: { sample: [0, 1] },
+        oscType: {
+          maybe: {
+            41: 'sawtooth',
+            40: 'square',
+            rest: 'triangle',
+          },
+        },
+        theme: {
+          maybe: {
+            70: {
+              sample: LEAD_8TH_PRESETS,
+              shuffle: true,
+            },
+            rest: { sample: AEOLIAN, amount: 4 },
+          },
+        },
+      },
+      randomizer: {
+        polyphony: 1,
+        gain: 0.5,
+        pan: { min: -0.75, max: -0.01 },
+        synth: {
+          name: 'retrosynth',
+          oscType0: { ref: 'oscType' },
+          oscType1: { ref: 'oscType' },
+          oscDetune0: { min: 1.0, max: 10.0 },
+          oscDetune1: { min: -10.0, max: -1.0 },
+          oscOn0: true,
+          oscOn1: true,
+          filterFreq: { min: 900, max: 1300 },
+          filterQ: { min: 1.5, max: 5 },
+          fEnvRelease: { if: [{ eq: [{ ref: 'style' }, '8th'] }, 1.4, 0.1] },
+          aEnvAttack: 0.01,
+          aEnvRelease: { if: [{ eq: [{ ref: 'style' }, '8th'] }, 0.4, 0.1] },
+          aEnvDecay: { if: [{ eq: [{ ref: 'style' }, '8th'] }, 0.6, 0.1] },
+          eqFrequency: 250,
+          eqType: 'lowshelf',
+          eqGain: -6,
         },
       },
     },

@@ -1,5 +1,5 @@
 import instruments, { InstrumentKey } from './instruments'
-import { rand, randFloat, isObject, maybe, randLt, sample } from '../utils'
+import { rand, randFloat, isObject, randLt } from '../utils'
 import sampler from '../audio-components/sampler'
 import compressor from '../audio-components/compressor'
 import reverb from '../audio-components/reverb'
@@ -15,21 +15,12 @@ import {
   Context,
   MasterInsertSpec,
   GeneratorFactory,
-  ValueRandomizerSpec,
-  MaybeSpec,
-  RangedValueSpec,
   PresetRandomizerSpec,
-  SampleRandomizerSpec,
   PresetTrackSpec,
-  ScalarOrRandSpec,
-  ConditionalSpec,
-  Condition,
-  OrClause,
-  Equality,
-  SpecRef,
 } from '../types'
+import { randFromSpec } from './randFromSpec'
 
-const { BD, CP, HC, PR, HO, BS, PD, ST, SN, RD, DL, FX } = instruments
+const { BD, CP, HC, PR, HO, BS, PD, ST, SN, RD, DL, FX, LD1 } = instruments
 
 let context: Context
 
@@ -81,10 +72,7 @@ const cleanup = (context: Context, index?: number) => {
 }
 
 const createInstrumentInstance = (context, instrument, specs) => {
-  console.log('createInstrumentInstance', instrument, specs)
-
   const handle = (isSynth) => {
-    console.log(instrument, isSynth)
     const polyphony = specs.specs[instrument].polyphony
     const shouldComp = false
     const shouldRev = false
@@ -141,6 +129,7 @@ const createInstrumentInstance = (context, instrument, specs) => {
     case SN:
     case DL:
     case FX:
+    case LD1:
     case RD: {
       return handle(!!specs.specs[instrument].synth)
     }
@@ -171,72 +160,6 @@ const randomizeGenerators = (preset) => {
   }
 }
 
-const ifSpec = (spec: ConditionalSpec['if'], refs) => {
-  const cond = randFromSpec(spec[0], refs)
-  const v1 = randFromSpec(spec[1], refs)
-  const v2 = randFromSpec(spec[2], refs)
-  return cond ? v1 : v2
-}
-
-const orSpec = (spec: OrClause['or'], refs) => {
-  return randFromSpec(spec[0], refs) || randFromSpec(spec[1], refs)
-}
-
-const eqSpec = (spec: Equality['eq'], refs) => {
-  return randFromSpec(spec[0], refs) == randFromSpec(spec[1], refs)
-}
-
-const randFromSpec = (
-  spec: number | ValueRandomizerSpec | ScalarOrRandSpec | Condition | SpecRef,
-  refs?: Record<string, number | string | boolean>
-) => {
-  if (spec === undefined || spec === null) {
-    return spec
-  }
-  if (
-    spec === 0 ||
-    typeof spec === 'number' ||
-    typeof spec == 'boolean' ||
-    typeof spec == 'string'
-  ) {
-    return spec
-  }
-  if (!spec) {
-    return null
-  }
-  if ((spec as ConditionalSpec).if) {
-    return ifSpec((spec as ConditionalSpec).if, refs)
-  }
-  if ((spec as OrClause).or) {
-    return orSpec((spec as OrClause).or, refs)
-  }
-  if ((spec as Equality).eq) {
-    return eqSpec((spec as Equality).eq, refs)
-  }
-  if ((spec as SpecRef).ref) {
-    return refs ? randFromSpec(refs[(spec as SpecRef).ref], refs) : null
-  }
-  const mSpec = spec as MaybeSpec
-  if (mSpec.maybe) {
-    return maybe(mSpec.maybe)
-  }
-  const ranged = spec as RangedValueSpec
-  if (ranged.min && ranged.max) {
-    return rand(ranged.min, ranged.max)
-  }
-  const sSpec = spec as SampleRandomizerSpec
-  if (sSpec.sample) {
-    return sample(sSpec.sample)
-  }
-  if (isObject(spec)) {
-    return Object.keys(spec).reduce((acc, curr) => {
-      acc[curr] = randFromSpec(spec[curr])
-      return acc
-    }, {})
-  }
-  return null
-}
-
 const drumRandomizer = (instrument, sampleGroup?: string, opts?) => () => {
   const options = opts || {}
   const specs = {
@@ -258,7 +181,6 @@ const drumRandomizer = (instrument, sampleGroup?: string, opts?) => () => {
 
 const synthRandomizer = (instrument, sampleGroup?, opts?) => () => {
   const options = opts || {}
-  console.log('synthRandomizer', options)
   const specs = {
     [instrument]: {
       pan: randFloat(-0.05, 0.05),
@@ -276,6 +198,16 @@ const synthRandomizer = (instrument, sampleGroup?, opts?) => () => {
 
 let randomizers = {}
 
+const unravel = (out, x, processedRefs) => {
+  Object.keys(x).forEach((key) => {
+    out[key] = randFromSpec(x[key], processedRefs)
+    const o = out[key]
+    if (isObject(o) && (o.sample || o.if || o.ref)) {
+      out[key] = randFromSpec(out[key], processedRefs)
+    }
+  })
+}
+
 const specify = (x: PresetRandomizerSpec, refs?: PresetTrackSpec['refs']) => {
   if (!x) {
     return x
@@ -288,9 +220,7 @@ const specify = (x: PresetRandomizerSpec, refs?: PresetTrackSpec['refs']) => {
     }, {})
   }
   const out = {}
-  Object.keys(x).forEach((key) => {
-    out[key] = randFromSpec(x[key], processedRefs)
-  })
+  unravel(out, x, processedRefs)
   return out
 }
 
@@ -304,13 +234,14 @@ const setupRandomizers = (preset) => {
       if (trackSpec.randomizer.synth) {
         randomizer = synthRandomizer
       }
+      const processedRefs = specify(trackSpec.refs)
       randomizers[`${key}-${i}`] = randomizer(
         key,
         preset.name,
         Object.assign(
           {},
-          { refs: specify(trackSpec.refs) },
-          specify(trackSpec.randomizer, trackSpec.refs)
+          { refs: processedRefs },
+          specify(trackSpec.randomizer, processedRefs)
         )
       )
     })

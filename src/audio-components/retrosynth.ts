@@ -118,7 +118,7 @@ const create = (ctx: AudioContext) => {
   }
 
   const setParam = (param, value, atTime) => {
-    console.log('setParam', param, value, atTime)
+    //console.log('setParam', param, value, atTime)
     const time = atTime || ctx.currentTime
     let match
     if (paramHandlers[param]) {

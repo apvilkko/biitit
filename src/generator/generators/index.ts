@@ -21,8 +21,9 @@ import instruments, { InstrumentKey } from '../instruments'
 import { dnbDrumloop, dnbStab, dnbSub } from './dnb'
 import { retrowaveHc } from './drums/retrowave-hc'
 import { retrowaveBass } from './bass/retrowave-bs'
+import { retrowaveLead1 } from './lead/retrowave-lead1'
 
-const { BD, CP, HC, PR, HO, BS, PD, ST, SN, DL, FX } = instruments
+const { BD, CP, HC, PR, HO, BS, PD, ST, SN, DL, FX, LD1 } = instruments
 
 const generators: Record<GeneratorName, GeneratorDefinition> = {
   'drums/fourbyfour': { generator: fourbyfour, for: [BD, CP, HC] },
@@ -46,6 +47,7 @@ const generators: Record<GeneratorName, GeneratorDefinition> = {
   'bass/dnb': { generator: dnbSub, for: [BS] },
   'fx/dnb': { generator: dnbStab, for: [FX, ST] },
   'bass/retrowave': { generator: retrowaveBass, for: [BS] },
+  'lead1/retrowave': { generator: retrowaveLead1, for: [LD1] },
 }
 
 export const all = {}

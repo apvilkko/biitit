@@ -137,6 +137,8 @@ export type MaybeParameter = any | RangedValueSpec
 
 export interface SampleRandomizerSpec {
   sample: Array<any>
+  amount?: number
+  shuffle?: boolean
 }
 
 export interface MaybeObjectShape extends Record<number, any> {
@@ -187,13 +189,14 @@ export type GeneratorPresetRandomizerSpec = [
   GeneratorPresetOptions
 ]
 
-export type SynthParamsSpec = Record<string, ScalarOrRandSpec>
+export type SynthParamsSpec = Record<string, ScalarOrRandSpec | SpecRef>
 
 export type PresetRandomizerSpec = {
   gain: number | ValueRandomizerSpec
   polyphony?: number
   variant?: ValueRandomizerSpec
   synth?: SynthParamsSpec
+  pan?: number | ValueRandomizerSpec
 }
 
 export interface PresetTrackSpec {
