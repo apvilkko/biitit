@@ -11,8 +11,8 @@ const create = (ctx, sampleSpec, inserts, polyphony) => {
       buffer = ret
     })
   }
-  const output = ctx.createGain()
-  const vca = ctx.createGain()
+  let output = ctx.createGain()
+  let vca = ctx.createGain()
   if (!inserts || inserts.length === 0) {
     vca.connect(output)
   } else {
@@ -51,9 +51,23 @@ const create = (ctx, sampleSpec, inserts, polyphony) => {
     }
   }
 
+  const cleanup = () => {
+    if (bufferSource) {
+      bufferSource.stop()
+      bufferSource.disconnect(vca)
+    }
+    if (!inserts || inserts.length === 0) {
+      vca.disconnect(output)
+    }
+    vca = null
+    buffer = null
+    output = null
+  }
+
   return {
     gain: output,
     output,
+    cleanup,
 
     noteOn,
     noteOff,

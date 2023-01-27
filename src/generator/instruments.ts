@@ -12,6 +12,7 @@ export enum InstrumentKey {
   FX = 'FX', // Effect
   DL = 'DL', // Drum loop
   LD1 = 'LD1', // Lead 1
+  LD2 = 'LD2', // Lead 2
 }
 
 export const all = [
@@ -28,6 +29,7 @@ export const all = [
   InstrumentKey.DL,
   InstrumentKey.FX,
   InstrumentKey.LD1,
+  InstrumentKey.LD2,
 ]
 
 export default {
@@ -44,4 +46,5 @@ export default {
   FX: InstrumentKey.FX,
   DL: InstrumentKey.DL,
   LD1: InstrumentKey.LD1,
+  LD2: InstrumentKey.LD2,
 }

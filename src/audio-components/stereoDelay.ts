@@ -1,10 +1,10 @@
-const synced = (ratio, tempo) => {
+const synced = (ratio: number, tempo: number) => {
   const beatLen = 60 / tempo
   return ratio * beatLen
 }
 
 const create = (
-  ctx,
+  ctx: AudioContext,
   {
     lDelay = 0.3,
     rDelay = 0.2,
@@ -13,15 +13,17 @@ const create = (
     gain = 1.0,
     tempo,
     sync,
+    lDelayFine = 0,
+    rDelayFine = 0,
   }
 ) => {
   const output = ctx.createGain()
   output.gain.value = gain
   const input = ctx.createGain()
   const delayL = ctx.createDelay(2)
-  delayL.delayTime.value = sync ? synced(lDelay, tempo) : lDelay
+  delayL.delayTime.value = (sync ? synced(lDelay, tempo) : lDelay) + lDelayFine
   const delayR = ctx.createDelay(2)
-  delayR.delayTime.value = sync ? synced(rDelay, tempo) : rDelay
+  delayR.delayTime.value = (sync ? synced(rDelay, tempo) : rDelay) + rDelayFine
   const filter = ctx.createBiquadFilter()
   filter.frequency.value = filterFrequency
   const feedbackL = ctx.createGain()

@@ -103,9 +103,9 @@ export interface SceneInstance {
   output: AudioNode
 }
 
-export interface MasterInsertSpec {
+export type MasterInsertSpec = {
   name: string
-}
+} & Record<string, unknown>
 
 export interface Scene {
   tempo: number

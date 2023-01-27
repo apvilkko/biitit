@@ -4,6 +4,7 @@ import sampler from '../audio-components/sampler'
 import compressor from '../audio-components/compressor'
 import reverb from '../audio-components/reverb'
 import retrosynth from '../audio-components/retrosynth'
+import polysynth from '../audio-components/polysynth'
 import stereoDelay from '../audio-components/stereoDelay'
 import waveshaper from '../audio-components/waveshaper'
 import { getRandomSample } from './catalog'
@@ -20,7 +21,7 @@ import {
 } from '../types'
 import { randFromSpec } from './randFromSpec'
 
-const { BD, CP, HC, PR, HO, BS, PD, ST, SN, RD, DL, FX, LD1 } = instruments
+const { BD, CP, HC, PR, HO, BS, PD, ST, SN, RD, DL, FX, LD1, LD2 } = instruments
 
 let context: Context
 
@@ -100,11 +101,16 @@ const createInstrumentInstance = (context, instrument, specs) => {
     let synth
     if (isSynth) {
       const params = specs.specs[instrument].synth
-      const synthFactory = params.name === 'retrosynth' ? retrosynth : null
+      const synthFactory =
+        params.name === 'retrosynth'
+          ? retrosynth
+          : params.name === 'polysynth'
+          ? polysynth
+          : null
       if (!synthFactory) {
         throw new Error('invalid synth name ' + params.name)
       }
-      synth = retrosynth(context.mixer.ctx)
+      synth = synthFactory(context.mixer.ctx)
       Object.keys(params).forEach((k) => {
         synth.setParam(k, params[k])
       })
@@ -130,6 +136,7 @@ const createInstrumentInstance = (context, instrument, specs) => {
     case DL:
     case FX:
     case LD1:
+    case LD2:
     case RD: {
       return handle(!!specs.specs[instrument].synth)
     }
@@ -320,7 +327,8 @@ const toEffectInstance = (scene, i) => (isSend?: boolean) => (effectSpec) => {
 const setupInstrumentInstance = (scene: Scene, index: number, presetTrack?) => {
   const track = context.mixer.tracks[index]
   const inserts = (presetTrack ? presetTrack.inserts : []) || []
-  const sends = (presetTrack ? presetTrack.sends : []) || []
+  const sends =
+    (presetTrack?.sends ? presetTrack.sends.map((x) => specify(x)) : []) || []
   const mapper = toEffectInstance(scene, index)
   const insertInstances = inserts.map(mapper()).filter((x) => !!x)
   const sendInstances = sends.map(mapper(true)).filter((x) => !!x)
@@ -429,7 +437,7 @@ const setupMasterEffects = (scene: Scene) => {
       let instance
       switch (spec.name) {
         case 'waveshaper': {
-          instance = waveshaper(context.mixer.ctx, spec)
+          instance = waveshaper(context.mixer.ctx, spec as unknown)
           break
         }
         default:

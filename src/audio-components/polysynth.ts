@@ -1,7 +1,10 @@
+import { Note } from '../types'
 import retrosynth from './retrosynth'
 const POLYPHONY = 3
 
-const oldest = (a, b) => {
+type TrackedNote = { index: number; atTime: number; note: Note }
+
+const oldest = (a: TrackedNote, b: TrackedNote) => {
   if (!a || !b) {
     return 0
   }
@@ -14,14 +17,16 @@ const oldest = (a, b) => {
   return 0
 }
 
-const create = (ctx) => {
+const create = (ctx: AudioContext) => {
   const output = ctx.createGain()
   output.gain.value = 0.6
 
   const POOL_SIZE = POLYPHONY * 2
   const instances = Array.from({ length: POOL_SIZE }).map(() => retrosynth(ctx))
   instances.map((x) => x.output.connect(output))
-  const tracker = Array.from({ length: POOL_SIZE }).map(() => null)
+  const tracker: TrackedNote[] = Array.from({ length: POOL_SIZE }).map(
+    () => null
+  )
 
   const getFreeIndex = () => {
     const found = tracker.findIndex((x) => !x)
@@ -32,7 +37,7 @@ const create = (ctx) => {
     return sorted[0].index
   }
 
-  const noteOn = (note, atTime) => {
+  const noteOn = (note: Note, atTime: number) => {
     const index = getFreeIndex()
     instances[index].noteOn(note, atTime)
     const data = { index, atTime, note }
@@ -40,7 +45,7 @@ const create = (ctx) => {
     return data
   }
 
-  const noteOff = (note, atTime) => {
+  const noteOff = (note: Note, atTime: number) => {
     let found
     if (!note || !note.note) {
       // Note off the oldest if not specified
@@ -68,7 +73,10 @@ const create = (ctx) => {
   }
 
   const cleanup = () => {
-    instances.map((x) => x.output.disconnect(output))
+    instances.map((x) => {
+      x.cleanup()
+      x.output.disconnect(output)
+    })
     stop()
     for (let i = 0; i < instances.length; ++i) {
       delete instances[i]

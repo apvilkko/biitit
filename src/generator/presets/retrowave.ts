@@ -8,7 +8,7 @@ import {
 } from '../generators/bass/retrowave-bs'
 import { LEAD_8TH_PRESETS } from '../generators/lead/retrowave-lead1'
 
-const { BD, HC, CP, PR, BS, SN, LD1 } = all
+const { BD, HC, CP, PR, BS, SN, LD1, LD2, PD } = all
 const { bar, fourBars } = NOTE_LENGTH
 
 const CHORD_PRESETS = [
@@ -159,7 +159,7 @@ const PRESET: PresetSpec = {
     },
     {
       type: LD1,
-      generator: ['lead1/retrowave', { patLength: [fourBars] }],
+      generator: ['lead1/retrowave', { patLength: [bar * 2] }],
       refs: {
         style: { sample: ['default', '8th'] },
         addOctave: { sample: [0, 1] },
@@ -183,6 +183,7 @@ const PRESET: PresetSpec = {
       randomizer: {
         polyphony: 1,
         gain: 0.5,
+        //gain: 0.01,
         pan: { min: -0.75, max: -0.01 },
         synth: {
           name: 'retrosynth',
@@ -203,6 +204,111 @@ const PRESET: PresetSpec = {
           eqGain: -6,
         },
       },
+      sends: [
+        {
+          name: 'delay',
+          sync: true,
+          lDelay: 0.75,
+          rDelay: 1.0,
+          feedback: 0.7,
+          gain: 0.3,
+          filterFrequency: 4000,
+          lDelayFine: { min: -0.02, max: 0.02 },
+          rDelayFine: { min: -0.02, max: 0.02 },
+        },
+      ],
+    },
+    {
+      type: LD2,
+      generator: ['lead2/retrowave', { patLength: [bar * 2] }],
+      refs: {
+        oscType: {
+          sample: ['sawtooth', 'square', 'triangle', 'sine'],
+        },
+      },
+      randomizer: {
+        polyphony: 1,
+        gain: { min: 0.4, max: 0.5 },
+        //gain: 0.01,
+        pan: { min: 0.01, max: 0.75 },
+        synth: {
+          name: 'retrosynth',
+          oscType0: { ref: 'oscType' },
+          oscType1: { ref: 'oscType' },
+          oscDetune0: { min: 1.0, max: 10.0 },
+          oscDetune1: { min: -10.0, max: -1.0 },
+          oscOn0: true,
+          oscOn1: { sample: [true, false] },
+          filterFreq: { min: 600, max: 1100 },
+          filterQ: { min: 1.5, max: 2.5 },
+          fEnvRelease: { min: 0.04, max: 0.09 },
+          aEnvAttack: 0.01,
+          aEnvRelease: { min: 0.05, max: 0.1 },
+          aEnvDecay: { min: 0.05, max: 0.1 },
+          eqFrequency: 300,
+          eqType: 'lowshelf',
+          eqGain: -6,
+        },
+      },
+      sends: [
+        {
+          name: 'delay',
+          sync: true,
+          lDelay: 1.0,
+          rDelay: 0.75,
+          feedback: 0.7,
+          gain: 0.3,
+          filterFrequency: 4000,
+          lDelayFine: { min: -0.02, max: 0.02 },
+          rDelayFine: { min: -0.02, max: 0.02 },
+        },
+      ],
+    },
+    {
+      type: PD,
+      generator: ['pad/retrowave', { noOff: true, patLength: [fourBars] }],
+      refs: {
+        oscType: {
+          sample: ['sawtooth', 'square', 'triangle'],
+        },
+      },
+      randomizer: {
+        polyphony: 3,
+        gain: { min: 0.1, max: 0.2 },
+        pan: { min: 0.01, max: 0.75 },
+        synth: {
+          name: 'polysynth',
+          oscType0: { ref: 'oscType' },
+          oscType1: { ref: 'oscType' },
+          oscDetune0: { min: 5.0, max: 12.0 },
+          oscDetune1: { min: -12.0, max: -5.0 },
+          oscOn0: true,
+          oscOn1: true,
+          filterFreq: { min: 600, max: 3500 },
+          filterQ: { min: 0.5, max: 5.0 },
+          fEnvAttack: { min: 0.1, max: 0.6 },
+          fEnvRelease: { min: 0.1, max: 1.0 },
+          aEnvAttack: { min: 0.2, max: 0.5 },
+          aEnvRelease: { min: 0.5, max: 1.0 },
+          aEnvDecay: { min: 0.1, max: 0.2 },
+          eqFrequency: 300,
+          eqType: 'lowshelf',
+          eqGain: -6,
+        },
+      },
+      sends: [
+        {
+          name: 'delay',
+          sync: true,
+          lDelay: 1.0,
+          rDelay: 0.75,
+          feedback: 0.7,
+          gain: 0.3,
+          filterFrequency: 4000,
+          lDelayFine: { min: -0.02, max: 0.02 },
+          rDelayFine: { min: -0.02, max: 0.02 },
+        },
+      ],
     },
   ],
 }

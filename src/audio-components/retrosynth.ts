@@ -44,7 +44,7 @@ const create = (ctx: AudioContext) => {
 
   const noteOn = (note, atTime) => {
     const time = atTime || ctx.currentTime
-    //console.log('noteOn', time, time + aAttack)
+    //console.log('noteOn', note, time, time + aAttack)
     vcos.forEach((vco) => {
       const freq = noteToFreq(note.note, vco.detune)
       vco.setFreq(freq, atTime)
@@ -111,9 +111,11 @@ const create = (ctx: AudioContext) => {
   }
 
   const cleanup = () => {
+    stop()
     vcas.forEach((vca) => {
       vca.disconnect(filter)
     })
+    filter.disconnect(eq)
     eq.disconnect(output)
   }
 
