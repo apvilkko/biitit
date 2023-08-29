@@ -7,7 +7,7 @@ import { randLt } from '../../../utils'
 const { sixteenth, quarter, fourBars, bar, eighth } = NOTE_LENGTH
 
 const filler: Filler = ({ currentNote, common, spec, state }) => {
-  let out: Note = null
+  let out: Note | undefined = undefined
 
   let newState = { ...state }
 
@@ -19,8 +19,8 @@ const filler: Filler = ({ currentNote, common, spec, state }) => {
       newState = { ...newState, inFill: false }
     }
   } else {
-    const cycle = sample([fourBars, 2 * fourBars, 4 * fourBars])
-    const fillLength = sample([quarter, 2 * quarter, bar, eighth])
+    const cycle = sample([fourBars, 2 * fourBars, 4 * fourBars]) as number
+    const fillLength = sample([quarter, 2 * quarter, bar, eighth]) as number
     if (isLastOf(fillLength, cycle)(currentNote)) {
       if (randLt(50)) {
         isNextInFill = true

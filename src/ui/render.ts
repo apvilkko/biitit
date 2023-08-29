@@ -2,6 +2,7 @@ import inputs, { createCallback } from './inputs'
 import { all } from '../generator/generators'
 import CATALOG from '../generator/catalog'
 import { SCENE_PRESETS } from '../generator/presets'
+import { Scene } from '../types'
 
 const getSampleLabel = (spec) => {
   if (!spec) {
@@ -107,8 +108,8 @@ const renderSample = (spec, i, key?: string) => {
   })
 }
 
-const renderGenerator = (scene, key, i) => {
-  const value = scene.generators[i] ? scene.generators[i].name : null
+const renderGenerator = (scene: Scene, i: number) => {
+  const value = scene.generators[i] ? scene.generators[i].name : undefined
   if (value) {
     return renderSelect({
       id: `generator-select-${i}`,
@@ -170,7 +171,7 @@ const renderPattern = (pattern) => {
   ${pattern
     .map((x) => {
       const empty = !(x && x.velocity)
-      const velo = empty ? null : Math.floor(255 * x.velocity)
+      const velo = empty ? undefined : Math.floor(255 * x.velocity)
       return empty
         ? '<div class="note empty"></div>'
         : `<div class="note" style="background-color: rgba(${velo},0,0,255);"></div>`
@@ -235,7 +236,7 @@ const renderPresets = (scene) => {
   return renderSelect({
     id: 'preset',
     options: PRESETS,
-    selected: scene.preset || null,
+    selected: scene.preset,
     label: 'preset',
   })
 }
@@ -279,7 +280,7 @@ const render = (state) => {
     const inst = scene.instruments[i]
     sect({ [`index-${i}`]: i + 1 }, 'td')
     sect({ [`pattern-${i}`]: renderPattern((state.pattern || {})[i]) }, 'td')
-    sect({ [`generator-${i}`]: renderGenerator(scene, key, i) }, 'td')
+    sect({ [`generator-${i}`]: renderGenerator(scene, i) }, 'td')
     sect(
       { [`sample-${i}`]: renderSample(inst.specs[key].sample, i, key) },
       'td'

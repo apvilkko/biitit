@@ -60,7 +60,7 @@ export const retrowaveLead1 = (opts) => {
           }
         }
       }
-      return null
+      return undefined
     },
     opts.noOff,
     opts.update

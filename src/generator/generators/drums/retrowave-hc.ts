@@ -29,7 +29,7 @@ export const retrowaveHc: GeneratorInterface = (opts) => {
       if (condition) {
         return { ...common, velocity: spec.volume }
       }
-      return null
+      return undefined
     },
     ({ scene }: { scene: Scene }) => {
       const leaveOut = rand(0, 3)

@@ -20,5 +20,5 @@ export const retrowaveBreakbeat: GeneratorInterface = (opts) =>
         }
       }
     }
-    return null
+    return undefined
   })

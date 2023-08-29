@@ -1,32 +1,43 @@
 import { ROOT_NOTE, NOTE_LENGTH } from '../constants'
 import fills from './fills'
 import { rand, sample, randFloat } from '../../utils'
-import { GeneratorState, NoteGetter, PreFn, Scene, UpdateFn } from '../../types'
+import {
+  DrumGeneratorOptions,
+  Filler,
+  GeneratorState,
+  InstanceSpec,
+  Note,
+  NoteGetter,
+  PatternGeneratorOptions,
+  PreFn,
+  Scene,
+} from '../../types'
 
 const { quarter, bar } = NOTE_LENGTH
 
-const createArray = (length) => Array.from({ length }, () => null)
+const createArray = (length: number) => Array.from({ length }, () => undefined)
 
-const isLastOf = (small, large) => (currentNote, exact?: boolean) => {
-  const modulo = currentNote % large
-  const delta = large - small
-  return exact ? modulo === delta : modulo >= delta
-}
+const isLastOf =
+  (small: number, large: number) => (currentNote: number, exact?: boolean) => {
+    const modulo = currentNote % large
+    const delta = large - small
+    return exact ? modulo === delta : modulo >= delta
+  }
 
-export const mod = (n, m) => ((n % m) + m) % m
+export const mod = (n: number, m: number) => ((n % m) + m) % m
 
 const createPatternGenerator =
   <T extends { inFill: boolean }>(
-    patLength,
-    pre: PreFn<T>,
+    patLength: NonNullable<PatternGeneratorOptions<T>['patLength']>,
+    pre: PatternGeneratorOptions<T>['pre'],
     noteGetter: NoteGetter<T>,
-    noOff,
-    update: UpdateFn<T>
+    noOff: PatternGeneratorOptions<T>['noOff'],
+    update: PatternGeneratorOptions<T>['update']
   ) =>
-  (style, scene: Scene) =>
+  (style: string, scene: Scene) =>
     function* patternGenerator() {
       let currentNote = 0
-      const pattern = createArray(patLength)
+      const pattern: Array<Note | undefined> = createArray(patLength)
       const data: T = pre ? pre({ style, scene }) || ({} as T) : ({} as T)
       while (true) {
         let note
@@ -34,7 +45,7 @@ const createPatternGenerator =
         if (update) {
           update(data, currentNote)
         }
-        if (pattern[position] === null || data.inFill) {
+        if (pattern[position] === undefined || data.inFill) {
           note =
             noteGetter({
               currentNote,
@@ -59,19 +70,23 @@ const isLastQuarter = isLastOf(quarter, bar)
 const isLast2Bar = isLastOf(bar, 2 * bar)
 
 const createDrumGenerator =
-  (opts, noteGetter, pre?: PreFn<Record<string, unknown>>) =>
-  (style, scene: Scene) => {
-    const data = pre ? pre({ scene }) : null
+  <T extends Record<string, unknown>>(
+    opts: DrumGeneratorOptions,
+    noteGetter: NoteGetter<T>,
+    pre?: PreFn<T>
+  ) =>
+  (style: string, scene: Scene) => {
+    const data: T | undefined = pre ? pre({ scene }) : undefined
     return function* drumGenerator() {
       const { index, instrument, fill } = opts
       let currentNote = 0
-      const spec = scene.instruments[index].specs[instrument]
+      const spec: InstanceSpec = scene.instruments[index].specs[instrument]
       const common = { instrument, note: ROOT_NOTE + spec.pitch }
       currentNote = yield
       let state = {
         lastQuarter: false,
       } as GeneratorState
-      let filler = typeof fill === 'string' ? fills[fill] : fill
+      const filler: Filler = typeof fill === 'string' ? fills[fill] : fill
       while (true) {
         state.lastQuarter = isLastQuarter(currentNote)
         state.last2Bar = isLast2Bar(currentNote)
@@ -82,7 +97,6 @@ const createDrumGenerator =
               common,
               state,
               spec,
-              opts,
             })
             state = { ...newState }
             if (state.inFill) {
@@ -97,39 +111,44 @@ const createDrumGenerator =
           style,
           state,
           data,
+          scene,
         })
       }
     }
   }
 
-const createBasePitchedNoteGenerator = (opts) =>
+const createBasePitchedNoteGenerator = <T extends { inFill: boolean }>(
+  opts: PatternGeneratorOptions<T>
+) =>
   createPatternGenerator(
     opts.patLength || bar,
     opts.pre,
-    ({ currentNote, position, patLength, pattern, scene, style, data }) => {
+    (({ currentNote, scene }) => {
       const index = opts.index
       const instrument = scene.types[index]
       const spec = scene.instruments[index].specs[instrument]
       const root = ROOT_NOTE + scene.rootNoteOffset
-      for (let i = 0; i < opts.probs.length; ++i) {
-        if (opts.probs[i].probFn(currentNote)) {
+      for (let i = 0; i < opts.probs!.length; ++i) {
+        if (opts.probs![i].probFn(currentNote)) {
           let pitch =
             root +
             (opts.noteOffset || 0) +
-            (rand(1, 100) < (opts.probs[i].prob || opts.rootProb || 50)
+            (rand(1, 100) < (opts.probs![i].prob || opts.rootProb || 50)
               ? 0
-              : (sample(opts.probs[i].choices || opts.choices) as number))
+              : (sample(
+                  (opts.probs![i].choices || opts.choices) as number[]
+                ) as number))
           return {
             note: pitch,
             instrument,
             velocity:
               spec.volume *
-              randFloat(opts.probs[i].min || 0.79, opts.probs[i].max || 1.0),
+              randFloat(opts.probs![i].min || 0.79, opts.probs![i].max || 1.0),
           }
         }
       }
-      return null
-    },
+      return undefined
+    }) as NoteGetter<T>,
     opts.noOff,
     opts.update
   )

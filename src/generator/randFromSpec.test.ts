@@ -3,7 +3,6 @@ import { randFromSpec } from './randFromSpec'
 
 describe('randFromSpec', () => {
   it('works for empty', () => {
-    expect(randFromSpec(null)).toEqual(null)
     expect(randFromSpec(undefined)).toEqual(undefined)
   })
 

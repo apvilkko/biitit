@@ -14,5 +14,5 @@ export default (opts) =>
           randFloat(opts.extraMinVelocity || 0.5, opts.extraMaxVelocity || 1.0),
       }
     }
-    return null
+    return undefined
   })

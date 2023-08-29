@@ -29,7 +29,7 @@ export const retrowaveBass = (opts) => {
       const instrument = scene.types[index]
       const spec = scene.instruments[index].specs[instrument]
 
-      const movement = spec.refs.movement as unknown as number[] | null
+      const movement = spec.refs.movement as unknown as number[]
       const style = spec.refs.style
       const movementSpeed: number =
         style === 'offbeat' ? bar : (spec.refs.movementSpeed as number)
@@ -89,7 +89,7 @@ export const retrowaveBass = (opts) => {
           return { note: pitch, velocity, instrument }
         }
       }
-      return null
+      return undefined
     },
     opts.noOff,
     opts.update

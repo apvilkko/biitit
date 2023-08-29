@@ -40,7 +40,7 @@ export const maybe = (prob?: number | MaybeObjectShape | {}, opt1?, opt2?) => {
     return randLt(prob) ? opt1 : opt2
   }
   let sum = 0
-  let chosen = null
+  let chosen
   const sorted = Object.keys(prob).sort(
     (a: number | string, b: number | string) => {
       if (a === 'rest') {

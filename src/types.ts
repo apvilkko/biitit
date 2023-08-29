@@ -8,8 +8,12 @@ export type GeneratorName = string
 
 export type GeneratorGenerator = Generator<any, any, any>
 
+export type GeneratorOptions = {
+  prob: number
+}
+
 export type GeneratorInterface = (
-  genOpts
+  genOpts: GeneratorOptions
 ) => (genName: GeneratorName, scene: Scene) => () => GeneratorGenerator
 
 export interface GeneratorDefinition {
@@ -25,8 +29,6 @@ export interface InstantiatedGenerator {
   name: GeneratorName
   generator: GeneratorGenerator
 }
-
-export type Instrument = any
 
 export type SimpleSampleSpec = {
   amount: number
@@ -251,7 +253,7 @@ export interface Filler {
     common: CommonNote
     spec: InstanceSpec
     state: GeneratorState
-  }): [Note, GeneratorState?]
+  }): [Note | undefined, GeneratorState?]
 }
 
 export type HitmapItem = {
@@ -262,14 +264,41 @@ export type HitmapItem = {
 
 export type Hitmap = HitmapItem[]
 
+export type DrumGeneratorOptions = {
+  index: number
+  instrument: InstrumentKey
+  fill: string | Filler
+}
+
+export type PatternGeneratorOptions<T> = {
+  patLength?: number
+  pre?: PreFn<T>
+  index: number
+  noteOffset?: number
+  choices?: number[]
+  noOff?: boolean
+  update?: UpdateFn<T>
+  probs?: Array<{
+    probFn: (a0: number) => boolean
+    prob?: number
+    choices?: number[]
+    min?: number
+    max?: number
+  }>
+  rootProb?: number
+}
+
 export type NoteGetterParams<T> = {
   currentNote: number
-  position: number
-  patLength: number
-  pattern: Array<unknown>
+  position?: number
+  patLength?: number
+  pattern?: Array<unknown>
   scene: Scene
   style: string
-  data: T
+  data: T | undefined
+  spec?: InstanceSpec
+  common?: CommonNote
+  state?: GeneratorState
 }
 
 export type NoteGetter<T> = (x: NoteGetterParams<T>) => Note
@@ -279,6 +308,33 @@ export type PreFnParams = {
   scene: Scene
 }
 
-export type PreFn<T> = (PreFnParams) => T
+export type PreFn<T> = (arg0: PreFnParams) => T
 
 export type UpdateFn<T> = (data: T, currentNote: number) => void
+
+export type SetParam = (
+  param: string,
+  value: number | string,
+  atTime: number
+) => void
+
+export type ParamHandler =
+  | ((value: number, time: number) => void)
+  | ((value: string) => void)
+  | ((value: number) => void)
+
+export type NoteOn = (note: Note, time: number) => void
+export type NoteOff = (note: Note | undefined, time: number) => void
+
+export type Synth = {
+  gain: GainNode
+  vcos: VCO[]
+  vcas: GainNode[]
+  output: GainNode
+  filter: AudioNode
+  setParam: SetParam
+  noteOn: NoteOn
+  noteOff: NoteOff
+  stop: () => void
+  cleanup: () => void
+}

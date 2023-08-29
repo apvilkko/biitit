@@ -39,7 +39,7 @@ export const retrowavePad = (opts) => {
           instrument,
         }))
       }
-      return null
+      return undefined
     },
     opts.noOff,
     opts.update

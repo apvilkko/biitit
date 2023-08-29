@@ -5,7 +5,7 @@ import { Note } from '../types'
 
 const create = (ctx, sampleSpec, inserts, polyphony) => {
   let bufferSource
-  let buffer = null
+  let buffer
   if (sampleSpec) {
     loadBuffer(ctx, sampleSpec).then((ret) => {
       buffer = ret
@@ -59,9 +59,9 @@ const create = (ctx, sampleSpec, inserts, polyphony) => {
     if (!inserts || inserts.length === 0) {
       vca.disconnect(output)
     }
-    vca = null
-    buffer = null
-    output = null
+    vca = undefined
+    buffer = undefined
+    output = undefined
   }
 
   return {

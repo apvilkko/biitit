@@ -11,5 +11,5 @@ export default (opts) =>
     } else if (currentNote % sixteenth === 0 && randLt(opts.prob || 10)) {
       return { ...common, velocity: spec.volume * randFloat(0.7, 1) }
     }
-    return null
+    return undefined
   })

@@ -1,18 +1,18 @@
-import { createDrumGenerator } from "../utils";
-import { randLt, randFloat } from "../../../utils";
-import { NOTE_LENGTH } from "../../constants";
+import { createDrumGenerator } from '../utils'
+import { randLt, randFloat } from '../../../utils'
+import { NOTE_LENGTH } from '../../constants'
 
-const { sixteenth } = NOTE_LENGTH;
+const { sixteenth } = NOTE_LENGTH
 
-export default opts =>
+export default (opts) =>
   createDrumGenerator(opts, ({ currentNote, spec, common }) => {
     if (currentNote % sixteenth === 0 && randLt(opts.prob || 50)) {
       return {
         ...common,
         velocity:
           spec.volume *
-          randFloat(opts.extraMinVelocity || 0.5, opts.extraMaxVelocity || 1.0)
-      };
+          randFloat(opts.extraMinVelocity || 0.5, opts.extraMaxVelocity || 1.0),
+      }
     }
-    return null;
-  });
+    return undefined
+  })

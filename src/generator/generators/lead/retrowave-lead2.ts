@@ -21,7 +21,7 @@ export const retrowaveLead2 = (opts) => {
           instrument,
         }
       }
-      return null
+      return undefined
     },
     opts.noOff,
     opts.update

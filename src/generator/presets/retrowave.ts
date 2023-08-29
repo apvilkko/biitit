@@ -120,7 +120,13 @@ const PRESET: PresetSpec = {
       refs: {
         style: { sample: BASS_STYLES },
         movement: {
-          sample: [...BASS_MOVEMENT_PRESETS, null, null, null, null],
+          sample: [
+            ...BASS_MOVEMENT_PRESETS,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+          ],
         },
         movementSpeed: { sample: [bar, bar / 2] },
       },

@@ -39,7 +39,7 @@ export const randFromSpec = (
   spec: number | ValueRandomizerSpec | ScalarOrRandSpec | Condition | SpecRef,
   refs?: Record<string, number | string | boolean>
 ) => {
-  if (spec === undefined || spec === null) {
+  if (typeof spec === 'undefined') {
     return spec
   }
   if (
@@ -51,7 +51,7 @@ export const randFromSpec = (
     return spec
   }
   if (!spec) {
-    return null
+    return undefined
   }
   if ((spec as ConditionalSpec).if) {
     return ifSpec((spec as ConditionalSpec).if, refs)
@@ -63,7 +63,7 @@ export const randFromSpec = (
     return eqSpec((spec as Equality).eq, refs)
   }
   if ((spec as SpecRef).ref) {
-    return refs ? randFromSpec(refs[(spec as SpecRef).ref], refs) : null
+    return refs ? randFromSpec(refs[(spec as SpecRef).ref], refs) : undefined
   }
   const mSpec = spec as MaybeSpec
   if (mSpec.maybe) {
@@ -95,5 +95,5 @@ export const randFromSpec = (
       return acc
     }, {})
   }
-  return null
+  return undefined
 }

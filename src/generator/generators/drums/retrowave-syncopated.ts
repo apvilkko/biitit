@@ -28,7 +28,7 @@ export const retrowaveSyncopated: GeneratorInterface = (opts) =>
           }
         }
       }
-      return null
+      return undefined
     },
     () => {
       const cycleLen = sample([2, 4]) * bar

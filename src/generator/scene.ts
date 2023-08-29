@@ -68,12 +68,12 @@ const cleanup = (context: Context, index?: number) => {
     cleanupInstance(instance)
     track.panner.disconnect(context.mixer.input)
     track.gain.disconnect(track.panner)
-    scene.instances[i] = null
+    scene.instances[i] = undefined
   })
 }
 
 const createInstrumentInstance = (context, instrument, specs) => {
-  const handle = (isSynth) => {
+  const handle = (isSynth: boolean) => {
     const polyphony = specs.specs[instrument].polyphony
     const shouldComp = false
     const shouldRev = false
@@ -106,7 +106,7 @@ const createInstrumentInstance = (context, instrument, specs) => {
           ? retrosynth
           : params.name === 'polysynth'
           ? polysynth
-          : null
+          : undefined
       if (!synthFactory) {
         throw new Error('invalid synth name ' + params.name)
       }
@@ -130,7 +130,6 @@ const createInstrumentInstance = (context, instrument, specs) => {
     case PR:
     case HO:
     case PD:
-    case BS:
     case ST:
     case SN:
     case DL:
@@ -142,7 +141,7 @@ const createInstrumentInstance = (context, instrument, specs) => {
     }
     default:
       console.error('no instance created for', instrument, specs)
-      return null
+      return undefined
   }
 }
 
@@ -162,7 +161,9 @@ const randomizeGenerators = (preset) => {
     })
   } else {
     startingSet.forEach((key) => {
-      generators[key] = getRandomGenerator(rand(1, 100) > 15 ? [key] : null)
+      generators[key] = getRandomGenerator(
+        rand(1, 100) > 15 ? [key] : undefined
+      )
     })
   }
 }
@@ -321,7 +322,7 @@ const toEffectInstance = (scene, i) => (isSend?: boolean) => (effectSpec) => {
       }
     }
   }
-  return null
+  return undefined
 }
 
 const setupInstrumentInstance = (scene: Scene, index: number, presetTrack?) => {
@@ -468,26 +469,28 @@ const setupMasterEffects = (scene: Scene) => {
 
 const randomize = (setState, presetName?: string): Scene => {
   cleanup(context)
-  const preset = PRESETS[presetName] || null
+  const preset = PRESETS[presetName]
   randomizeGenerators(preset)
   setupRandomizers(preset)
-  let shufflePercentage = preset ? randFromSpec(preset.shufflePercentage) : null
+  let shufflePercentage = preset
+    ? randFromSpec(preset.shufflePercentage)
+    : undefined
   if (typeof shufflePercentage !== 'number') {
     shufflePercentage = rand(0, 30)
   }
   const scene: Scene = {
-    tempo: (preset ? randFromSpec(preset.tempo) : null) || rand(80, 165),
+    tempo: (preset ? randFromSpec(preset.tempo) : undefined) || rand(80, 165),
     shufflePercentage,
     types: [],
     instruments: [],
     generators: [],
     instances: [],
     rootNoteOffset: rand(-4, 4),
-    chords: preset ? randFromSpec(preset.chords) : null,
+    chords: preset ? randFromSpec(preset.chords) : undefined,
     masterInserts:
       preset && preset.masterInserts
         ? preset.masterInserts.map(normalizeSpec)
-        : (randLt(50) ? [{ name: 'waveshaper' }] : null) || null,
+        : (randLt(50) ? [{ name: 'waveshaper' }] : undefined) || undefined,
   }
   const instSet = preset ? preset.tracks.map((x) => x.type) : startingSet
   instSet.forEach((instrument, i) => {
@@ -507,7 +510,7 @@ const randomize = (setState, presetName?: string): Scene => {
     scene.instances.push(
       createInstrumentInstance(context, instrument, scene.instruments[i])
     )
-    setupInstrumentInstance(scene, i, preset ? preset.tracks[i] : null)
+    setupInstrumentInstance(scene, i, preset ? preset.tracks[i] : undefined)
   })
 
   setupMasterEffects(scene)

@@ -1,10 +1,10 @@
-import { Note } from '../types'
+import { Note, NoteOff, NoteOn, SetParam, Synth } from '../types'
 import retrosynth from './retrosynth'
 const POLYPHONY = 3
 
 type TrackedNote = { index: number; atTime: number; note: Note }
 
-const oldest = (a: TrackedNote, b: TrackedNote) => {
+const oldest = (a: TrackedNote | undefined, b: TrackedNote | undefined) => {
   if (!a || !b) {
     return 0
   }
@@ -17,16 +17,20 @@ const oldest = (a: TrackedNote, b: TrackedNote) => {
   return 0
 }
 
-const create = (ctx: AudioContext) => {
+const create = (
+  ctx: AudioContext
+): Omit<Synth, 'filter' | 'gain' | 'vcos' | 'vcas'> & {
+  instances: Synth[]
+} => {
   const output = ctx.createGain()
   output.gain.value = 0.6
 
   const POOL_SIZE = POLYPHONY * 2
   const instances = Array.from({ length: POOL_SIZE }).map(() => retrosynth(ctx))
   instances.map((x) => x.output.connect(output))
-  const tracker: TrackedNote[] = Array.from({ length: POOL_SIZE }).map(
-    () => null
-  )
+  const tracker: Array<TrackedNote | undefined> = Array.from({
+    length: POOL_SIZE,
+  }).map(() => undefined)
 
   const getFreeIndex = () => {
     const found = tracker.findIndex((x) => !x)
@@ -34,10 +38,10 @@ const create = (ctx: AudioContext) => {
       return found
     }
     const sorted = [...tracker].sort(oldest)
-    return sorted[0].index
+    return sorted[0]!.index
   }
 
-  const noteOn = (note: Note, atTime: number) => {
+  const noteOn: NoteOn = (note, atTime) => {
     const index = getFreeIndex()
     instances[index].noteOn(note, atTime)
     const data = { index, atTime, note }
@@ -45,7 +49,7 @@ const create = (ctx: AudioContext) => {
     return data
   }
 
-  const noteOff = (note: Note, atTime: number) => {
+  const noteOff: NoteOff = (note, atTime) => {
     let found
     if (!note || !note.note) {
       // Note off the oldest if not specified
@@ -59,12 +63,12 @@ const create = (ctx: AudioContext) => {
       )
     }
     if (found) {
-      instances[found.index].noteOff(null, atTime)
-      tracker[found.index] = null
+      instances[found.index].noteOff(undefined, atTime)
+      tracker[found.index] = undefined
     }
   }
 
-  const setParam = (param, value, atTime) => {
+  const setParam: SetParam = (param, value, atTime) => {
     instances.map((x) => x.setParam(param, value, atTime))
   }
 
